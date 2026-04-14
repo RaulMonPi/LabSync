@@ -5,6 +5,8 @@ const NUMBLOCKS_Y = 20;             // classic height
 const MOVEMENT_LAG = 85;            // ms (soft key repeat)
 const INITIAL_FALL_DELAY = 600;     // ms
 
+
+//Hola esto es una prueba
 // 7 tetrominoes, rotation around a center cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 7;
