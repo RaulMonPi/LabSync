@@ -1,3 +1,14 @@
+/* fuente para el título*/
+@font-face {
+  font-family: 'KyotoTitle';
+  src: url('../assets/fonts/kyoto.ttf') format('truetype');
+}
+/*funete para subtitulos y textos*/
+@font-face {
+  font-family: 'MangaStyle';
+  src: url('../assets/fonts/MangaStyle.ttf') format('truetype');
+}
+
 html,
 body {
   margin: 0;

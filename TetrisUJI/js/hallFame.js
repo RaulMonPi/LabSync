@@ -1,6 +1,6 @@
 //Pantalla de Hall of Fame (poner las puntuaciones records)
 
-var creditsState = {
+var hallFameState = {
 
   preload: function () {
     // cargar assests que necesitemos
@@ -13,45 +13,17 @@ var creditsState = {
     // Título
     var titulo = game.add.text(
       game.world.centerX,
-      game.world.centerY - 150,
-      'CREDITS',
+      game.world.centerY - 20,
+      'HALL OF FAME',
       { font: '36px KyotoTitle', fill: '#ffdd00', align: 'center' }
     );
     titulo.anchor.set(0.5);
 
-    //LOS NOMBRES
-    var btnJugarOtraVez = game.add.text(
-      game.world.centerX,
-      game.world.centerY -40,
-      'Shary Balbera Ubarnes',
-      { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
-    );
-    btnJugarOtraVez.anchor.set(0.5);
-
-  
-    var btnJugarOtraVez = game.add.text(
-      game.world.centerX,
-      game.world.centerY + 20,
-      ' Luis De Quevedo Peña',
-      { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
-    );
-    btnJugarOtraVez.anchor.set(0.5);
-
-  
-    var btnJugarOtraVez = game.add.text(
-      game.world.centerX,
-      game.world.centerY + 80,
-      ' Raul Montero Piñeiro ',
-      { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
-    );
-    btnJugarOtraVez.anchor.set(0.5);
-
-
     // Botón para volver a selección de niveles
     var btnJugarOtraVez = game.add.text(
-      game.world.centerX +90,
-      game.world.centerY +230,
-      '[ Menú ]',
+      game.world.centerX,
+      game.world.centerY + 60,
+      '[ JUGAR OTRA VEZ ]',
       { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
     );
     btnJugarOtraVez.anchor.set(0.5);

@@ -170,7 +170,10 @@ class Tetromino {
 };
 
 
-let gameState = {
+var gameState = {
+  preload: function () {
+    // Aquí se cargarían assets si los hubiera
+  },
   create: resetGame,
   update: updateGame
 };
@@ -195,7 +198,6 @@ let gameOverState = false;
 
 let timer, loop;
 let currentMovementTimer = 0;
-let shade, centerText;
 
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
@@ -264,42 +266,21 @@ function spawn() {
   if (conflict) setGameOver(true);
 };
 
-// Activa el estado de fin de partida y muestra un mensaje de reinicio.
+// Activa el estado de fin de partida y cambia al state HallFame.
 function setGameOver(on){
   gameOverState = on;
   if (gameOverState) {
-    timer.pause();
-    makeShade(0.65);
-    centerText = game.add.text(game.world.centerX, game.world.centerY,
-      'GAME OVER\n\nPress R to restart', {
-        font: 'bold 32px system-ui, -apple-system, Segoe UI, Roboto, Arial',
-        fill: '#ffffff',
-        align: 'center'
-      }
-    );
-    centerText.anchor.set(0.5);
+    timer.removeAll();
+    game.state.start('HallFame');
   }
 };
 
-// Dibuja un velo oscuro encima del tablero para estados como 'game over'.
-function makeShade(alpha){
-  shade = game.add.graphics(0,0);
-  shade.beginFill(0x000000, alpha);
-  shade.drawRect(0, 0, gameWidth, gameHeight);
-  shade.endFill();
-};
 
 // Bucle de actualización para leer input y mover la pieza
 function updateGame() {
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
 
-  if (gameOverState) {
-    if (keyRestart.isDown)
-      resetGame();
-    currentMovementTimer = 0;
-    return;
-  };
 
   if (cursors.left.isDown && tetromino.canMove(tetromino.slide.bind(tetromino), 'left')) {
     tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'left');
