@@ -8,7 +8,7 @@ var creditsState = {
 
   create: function () {
     // fondo
-    game.stage.backgroundColor = '#1c1400';
+    game.stage.backgroundColor = '#8B0000';
 
     // Título
     var titulo = game.add.text(
@@ -51,7 +51,7 @@ var creditsState = {
     var btnJugarOtraVez = game.add.text(
       game.world.centerX +90,
       game.world.centerY +230,
-      '[ Menú ]',
+      '[ Menu ]',
       { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
     );
     btnJugarOtraVez.anchor.set(0.5);
@@ -59,8 +59,8 @@ var creditsState = {
     btnJugarOtraVez.events.onInputDown.add(function () {
       game.state.start('Levels');
     }, this);
-    btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
-    btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#00ff99'; }, this);
+    btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffdd00'; }, this);
+    btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
   },
 
   update: function () {

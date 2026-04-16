@@ -33,8 +33,8 @@ var levelsState = {
       game.state.start('Game');
     }, this);
     //efecto hover
-    btnNivel1.events.onInputOver.add(function () { btnNivel1.fill = '#ffffff'; }, this);
-    btnNivel1.events.onInputOut.add(function () { btnNivel1.fill = '#ffdd00'; }, this);
+    btnNivel1.events.onInputOver.add(function () { btnNivel1.fill = '#ffdd00'; }, this);
+    btnNivel1.events.onInputOut.add(function () { btnNivel1.fill = '#ffffff'; }, this);
 
     // Nivel 2 de momento no llevan a ningún nivel
     var btnNivel2 = game.add.text(
@@ -83,8 +83,8 @@ var levelsState = {
         game.state.start('credits');
       }, this);
       //efecto hover
-      btnCredits.events.onInputOver.add(function () { btnNivel1.fill = '#ffffff'; }, this);
-      btnCredits.events.onInputOut.add(function () { btnNivel1.fill = '#ffdd00'; }, this);
+      btnCredits.events.onInputOver.add(function () { btnCredits.fill = '#ffdd00'; }, this);
+      btnCredits.events.onInputOut.add(function () { btnCredits.fill = '#ffffff'; }, this);
 
 
 btnCredits.anchor.set(1, 1);
