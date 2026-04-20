@@ -4,11 +4,24 @@ const NUMBLOCKS_X = 10;             // classic width
 const NUMBLOCKS_Y = 20;             // classic height
 const MOVEMENT_LAG = 85;            // ms (soft key repeat)
 const INITIAL_FALL_DELAY = 600;     // ms
+const PREVIEW_PANEL_BLOCKS = 6;     // panel width in block units
+const PREVIEW_BLOCKSIZE = 18;       // px
 
 
 // 7 tetrominoes, rotation around a center cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 7;
+const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
+
+const TETROMINO_OFFSETS = {
+  0 : [[0,-1],[0,0],[0,1],[1,1]],     // L
+  1 : [[0,-1],[0,0],[0,1],[-1,1]],    // J
+  2 : [[-1,0],[0,0],[1,0],[2,0]],     // I
+  3 : [[-1,-1],[0,-1],[0,0],[-1,0]],  // O
+  4 : [[-1,0],[0,0],[0,-1],[1,-1]],   // S
+  5 : [[-1,0],[0,0],[1,0],[0,1]],     // T
+  6 : [[-1,-1],[0,-1],[0,0],[1,0]]    // Z
+};
 
 // Color de las piezas: blanco
 const PIECE_COLOR = 0xFFFFFF;
@@ -56,15 +69,7 @@ class Tetromino {
     this.blocks = [];
     this.cells = [];
     // The positions of each block of a tetromino with respect to its center (cell coords)
-    this.offsets = {
-      0 : [[0,-1],[0,0],[0,1],[1,1]],     // L
-      1 : [[0,-1],[0,0],[0,1],[-1,1]],    // J
-      2 : [[-1,0],[0,0],[1,0],[2,0]],     // I
-      3 : [[-1,-1],[0,-1],[0,0],[-1,0]],  // O
-      4 : [[-1,0],[0,0],[0,-1],[1,-1]],   // S
-      5 : [[-1,0],[0,0],[1,0],[0,1]],     // T
-      6 : [[-1,-1],[0,-1],[0,0],[1,0]]    // Z
-    }
+    this.offsets = TETROMINO_OFFSETS;
   }
 
   // Dibuja el bloque mediante Graphics de Phaser (sin sprites), con un pequeño margen
@@ -180,7 +185,8 @@ var gameState = {
 
 let bg;
 
-let gameWidth  = NUMBLOCKS_X * BLOCKSIZE;
+let boardWidth = NUMBLOCKS_X * BLOCKSIZE;
+let gameWidth  = boardWidth + (PREVIEW_PANEL_BLOCKS * BLOCKSIZE);
 let gameHeight = NUMBLOCKS_Y * BLOCKSIZE;
 
 let y_start = { 0:1, 1:1, 2:0, 3:1, 4:1, 5:0, 6:1 };
@@ -193,8 +199,13 @@ let move_offsets = {
 
 // Elements for the game
 let tetromino, theTetris;
-let cursors, keyRotate, keyRestart;
+let cursors, keyRotate, keyRestart, keyPause;
 let gameOverState = false;
+let pausedState = false;
+let pauseWasDown = false;
+let nextShape = null;
+let previewBlocks = [];
+let pauseLabel = null;
 
 let timer, loop;
 let currentMovementTimer = 0;
@@ -215,8 +226,11 @@ function resetGame() {
 
   // subtle grid background
   bg = game.add.graphics(0,0);
-  bg.beginFill(0x0E0E0E, 1);
-  bg.drawRect(0,0,gameWidth,gameHeight);
+  bg.beginFill(0x111111, 1);
+  bg.drawRect(0,0,boardWidth,gameHeight);
+  bg.endFill();
+  bg.beginFill(0x1A1A1A, 1);
+  bg.drawRect(boardWidth,0,gameWidth - boardWidth,gameHeight);
   bg.endFill();
   bg.lineStyle(1, 0x1B1B1B, 1);
   for (let x = 0; x < NUMBLOCKS_X; x++) {
@@ -228,10 +242,39 @@ function resetGame() {
     bg.lineTo(gameWidth, y*BLOCKSIZE);
   };
 
+  game.add.text(
+    boardWidth + 16,
+    20,
+    'NEXT',
+    { font: '22px MangaStyle', fill: '#ffdd00' }
+  );
+
+  game.add.text(
+    boardWidth + 16,
+    gameHeight - 28,
+    'P: Pause',
+    { font: '16px MangaStyle', fill: '#cccccc' }
+  );
+
+  nextShape = randomShape();
+  updateNextPreview(nextShape);
+
   // input
   cursors = game.input.keyboard.createCursorKeys();
   keyRotate = game.input.keyboard.addKey(Phaser.Keyboard.UP);
   keyRestart = game.input.keyboard.addKey(Phaser.Keyboard.R);
+  keyPause = game.input.keyboard.addKey(Phaser.Keyboard.P);
+
+  pauseLabel = game.add.text(
+    boardWidth / 2,
+    gameHeight / 2,
+    'PAUSED',
+    { font: '48px KyotoTitle', fill: '#ffdd00', align: 'center' }
+  );
+  pauseLabel.anchor.set(0.5);
+  pauseLabel.visible = false;
+  pausedState = false;
+  pauseWasDown = false;
 
   // timer
   // IMPORTANTE: si venimos de un game over, el Timer andará pausado.
@@ -255,10 +298,13 @@ function fall() {
 
 // Crea una nueva pieza en la parte superior; si colisiona al aparecer, termina la partida.
 function spawn() {
-  let shape = Math.floor(Math.random() * N_BLOCK_TYPES);
+  let shape = nextShape;
   let color = PIECE_COLOR;
 
   tetromino = new Tetromino(shape, color, theTetris);
+
+  nextShape = randomShape();
+  updateNextPreview(nextShape);
 
   let start_x = Math.floor(NUMBLOCKS_X/2);
   let start_y = y_start[tetromino.shape];
@@ -266,18 +312,119 @@ function spawn() {
   if (conflict) setGameOver(true);
 };
 
+function randomShape() {
+  return Math.floor(Math.random() * N_BLOCK_TYPES);
+};
+
+// Redibuja el panel de preview con la forma del siguiente tetromino.
+// Primero elimina la miniatura anterior y luego centra la nueva pieza en el panel lateral.
+function updateNextPreview(shape) {
+  for (let i = 0; i < previewBlocks.length; i++) {
+    previewBlocks[i].destroy();
+  }
+  previewBlocks = [];
+
+  let offsets = TETROMINO_OFFSETS[shape];
+  let minX = offsets[0][0];
+  let maxX = offsets[0][0];
+  let minY = offsets[0][1];
+  let maxY = offsets[0][1];
+
+  for (let j = 1; j < offsets.length; j++) {
+    minX = Math.min(minX, offsets[j][0]);
+    maxX = Math.max(maxX, offsets[j][0]);
+    minY = Math.min(minY, offsets[j][1]);
+    maxY = Math.max(maxY, offsets[j][1]);
+  }
+
+  let shapeWidth = (maxX - minX + 1) * PREVIEW_BLOCKSIZE;
+  let shapeHeight = (maxY - minY + 1) * PREVIEW_BLOCKSIZE;
+  let panelX = boardWidth;
+  let panelWidth = gameWidth - boardWidth;
+  let originX = panelX + Math.floor((panelWidth - shapeWidth) / 2);
+  let originY = 70 + Math.floor((4 * PREVIEW_BLOCKSIZE - shapeHeight) / 2);
+
+  for (let k = 0; k < offsets.length; k++) {
+    let px = originX + (offsets[k][0] - minX) * PREVIEW_BLOCKSIZE;
+    let py = originY + (offsets[k][1] - minY) * PREVIEW_BLOCKSIZE;
+
+    let g = game.add.graphics(px, py);
+    g.beginFill(PIECE_COLOR, 1);
+    g.drawRect(1, 1, PREVIEW_BLOCKSIZE - 2, PREVIEW_BLOCKSIZE - 2);
+    g.endFill();
+
+    previewBlocks.push(g);
+  }
+};
+
 // Activa el estado de fin de partida y cambia al state HallFame.
 function setGameOver(on){
   gameOverState = on;
   if (gameOverState) {
+    pausedState = false;
     timer.removeAll();
     game.state.start('HallFame');
   }
 };
 
+function togglePause() {
+  if (gameOverState) return;
+
+  pausedState = !pausedState;
+  pauseLabel.visible = pausedState;
+
+  if (pausedState) {
+    timer.pause();
+  } else {
+    timer.resume();
+    currentMovementTimer = 0;
+  }
+};
+
+// Intenta rotar la pieza; si choca con una pared, prueba pequeños desplazamientos laterales
+// para "empujarla" hasta una posición válida antes de cancelar la rotación.
+function rotateWithWallKick(dir) {
+  if (tetromino.canMove(tetromino.rotate.bind(tetromino), dir)) {
+    tetromino.move(tetromino.rotate.bind(tetromino), null, dir);
+    return true;
+  }
+
+  for (let i = 0; i < WALL_KICK_OFFSETS.length; i++) {
+    let kick = WALL_KICK_OFFSETS[i];
+    let kickX = kick[0];
+    let kickY = kick[1];
+
+    let kickedRotate = function (block, d) {
+      let rotated = tetromino.rotate(block, d);
+      return [rotated[0] + kickX, rotated[1] + kickY];
+    };
+
+    let kickedCenter = function () {
+      return [tetromino.center[0] + kickX, tetromino.center[1] + kickY];
+    };
+
+    if (tetromino.canMove(kickedRotate, dir)) {
+      tetromino.move(kickedRotate, kickedCenter, dir);
+      return true;
+    }
+  }
+
+  return false;
+};
+
 
 // Bucle de actualización para leer input y mover la pieza
 function updateGame() {
+  let pauseIsDown = keyPause.isDown;
+  if (pauseIsDown && !pauseWasDown) {
+    pauseWasDown = true;
+    togglePause();
+    return;
+  }
+  if (!pauseIsDown) pauseWasDown = false;
+
+  if (pausedState || gameOverState) return;
+
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
 
@@ -289,9 +436,7 @@ function updateGame() {
   } else if (cursors.down.isDown && tetromino.canMove(tetromino.slide.bind(tetromino), 'down')) {
     tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'down');
   } else if (keyRotate.isDown) {
-    // O piece rotation is pointless, but harmless
-    if (tetromino.canMove(tetromino.rotate.bind(tetromino), 'clockwise'))
-      tetromino.move(tetromino.rotate.bind(tetromino), null, 'clockwise');
+    rotateWithWallKick('clockwise');
   };
 
   currentMovementTimer = 0;
@@ -331,7 +476,7 @@ function checkLines(candidateLines) {
 // Suma el estado de una fila para detectar si está completamente ocupada.
 function lineSum(y) {
   let s = 0;
-  for (let x = 0; x < NUMBLOCKS_X; x++) 
+  for (let x = 0; x < NUMBLOCKS_X; x++)
     s += theTetris.scene[x][y];
   return s;
 };
