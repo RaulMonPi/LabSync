@@ -1,50 +1,75 @@
-//  Pantalla de bienvenida
-
 var splashState = {
-
   preload: function () {
-    // Aquí se cargarían assets si los hubiera
   },
 
   create: function () {
-    // Fondo rojo oscuro
     game.stage.backgroundColor = '#8B0000';
 
-    // Título
     var titulo = game.add.text(
       game.world.centerX,
-      game.world.centerY - 60,
+      game.world.centerY - 120,
       'KYOTETRIS',
       { font: '48px KyotoTitle', fill: '#ffffff', align: 'center' }
     );
     titulo.anchor.set(0.5);
 
-    // Botón de texto "JUGAR"
+    var subtitulo = game.add.text(
+      game.world.centerX,
+      game.world.centerY - 35,
+      'Introduce tu nombre',
+      { font: '22px MangaStyle', fill: '#f3d9b1', align: 'center' }
+    );
+    subtitulo.anchor.set(0.5);
+
+    var inputNombre = document.createElement('input');
+    inputNombre.type = 'text';
+    inputNombre.maxLength = 16;
+    inputNombre.placeholder = 'Jugador';
+    inputNombre.value = localStorage.getItem('playerName') || '';
+    inputNombre.autocomplete = 'off';
+
+    inputNombre.className = 'splash-name-input';
+
+    document.body.appendChild(inputNombre);
+
     var btnJugar = game.add.text(
       game.world.centerX,
-      game.world.centerY + 40,
+      game.world.centerY + 70,
       '[ JUGAR ]',
       { font: '28px MangaStyle', fill: '#ffffff', align: 'center' }
     );
     btnJugar.anchor.set(0.5);
-
-    // Hacer el texto interactivo 
     btnJugar.inputEnabled = true;
-    btnJugar.events.onInputDown.add(function () {
-      game.state.start('Levels');
-    }, this);
 
-    // Efecto hover(cuando entramos en la pantalal cambia de color )
     btnJugar.events.onInputOver.add(function () {
-      btnJugar.fill = '#ffdd00';
-    }, this);
+      btnJugar.fill = '#f3d9b1';
+    });
+
     btnJugar.events.onInputOut.add(function () {
       btnJugar.fill = '#ffffff';
-    }, this);
+    });
+
+    btnJugar.events.onInputDown.add(function () {
+      var nombre = inputNombre.value.trim();
+      if (nombre === '') nombre = 'Jugador';
+
+      localStorage.setItem('playerName', nombre);
+      window.playerName = nombre;
+
+      if (inputNombre.parentNode) inputNombre.parentNode.removeChild(inputNombre);
+      game.state.start('Levels');
+    });
+
+    this.nameInput = inputNombre;
+  },
+
+  shutdown: function () {
+    if (this.nameInput && this.nameInput.parentNode) {
+      this.nameInput.parentNode.removeChild(this.nameInput);
+    }
   },
 
   update: function () {
-    // no tenemos funciones por ahora
+    // no tenemos nada por ahora
   }
-
 };
