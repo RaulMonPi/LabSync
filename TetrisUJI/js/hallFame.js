@@ -32,7 +32,7 @@ var hallFameState = {
       game.state.start('Menu');
     }, this);
     btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
-    btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#00ff99'; }, this);
+    btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#ffdd00'; }, this);
   },
 
   update: function () {
