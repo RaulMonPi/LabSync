@@ -1,0 +1,42 @@
+//Pantalla de Hall of Fame (poner las puntuaciones records)
+
+var hallFameState = {
+
+  preload: function () {
+    // cargar assests que necesitemos
+  },
+
+  create: function () {
+    // fondo
+    game.stage.backgroundColor = '#1c1400';
+
+    // Título
+    var titulo = game.add.text(
+      game.world.centerX,
+      game.world.centerY - 20,
+      'HALL OF FAME',
+      { font: '36px KyotoTitle', fill: '#ffdd00', align: 'center' }
+    );
+    titulo.anchor.set(0.5);
+
+    // Botón para volver a selección de niveles
+    var btnJugarOtraVez = game.add.text(
+      game.world.centerX,
+      game.world.centerY + 60,
+      '[ JUGAR OTRA VEZ ]',
+      { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
+    );
+    btnJugarOtraVez.anchor.set(0.5);
+    btnJugarOtraVez.inputEnabled = true;
+    btnJugarOtraVez.events.onInputDown.add(function () {
+      game.state.start('Levels');
+    }, this);
+    btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
+    btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#00ff99'; }, this);
+  },
+
+  update: function () {
+    // Por ahora no hace nada
+  }
+
+};
