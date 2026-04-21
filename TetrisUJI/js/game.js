@@ -226,7 +226,7 @@ let previewBlocks = [];
 let pauseLabel = null;
 let matchTimerText = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
-let MATCH_DURATION_MS = 10000;
+let MATCH_DURATION_MS = 60000;
 let matchTimeLeftMs = MATCH_DURATION_MS;
 
 let timer, loop;
@@ -329,12 +329,24 @@ function destroyNameEditor() {
     playerNameText.fill = '#ffffff';
   }
 }
-
+let bajado1 = false;
+let bajado2 = false;
 function updateMatchTimerText() {
   if (!matchTimerText) return;
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
-  matchTimerText.text = 'TIME: ' + secondsLeft;
+  if (secondsLeft <= (MATCH_DURATION_MS/1000) / 2 && !bajado1) {
+    FALL_DELAY = INITIAL_FALL_DELAY / 2;
+    timer.remove(loop);
+    loop = timer.loop(FALL_DELAY, fall, this);
+    bajado1 = true;
+  }else if (secondsLeft <= (MATCH_DURATION_MS/1000) / 4 && !bajado2) {
+    FALL_DELAY = INITIAL_FALL_DELAY / 4;
+    timer.remove(loop);
+    loop = timer.loop(FALL_DELAY, fall, this);
+    bajado2 = true;
+  }
+  matchTimerText.text = 'TIME: ' + secondsLeft + "Velocidad: " + FALL_DELAY; // Hay q ponerlo en el HTML DOM
 }
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
