@@ -58,6 +58,15 @@ var splashState = {
       game.state.start('Menu');
     };
 
+    this.enterHandler = function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startMenu();
+      }
+    };
+
+    document.addEventListener('keydown', this.enterHandler);
+
     inputNombre.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -73,6 +82,11 @@ var splashState = {
   },
 
   shutdown: function () {
+    if (this.enterHandler) {
+      document.removeEventListener('keydown', this.enterHandler);
+      this.enterHandler = null;
+    }
+
     if (this.nameInput && this.nameInput.parentNode) {
       this.nameInput.parentNode.removeChild(this.nameInput);
     }
