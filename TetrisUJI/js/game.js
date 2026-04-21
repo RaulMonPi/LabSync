@@ -227,7 +227,6 @@ function resetGame() {
   theTetris = new Tetris();
   theTetris.initGrid();
 
-  // subtle grid background
   bg = game.add.graphics(0,0);
   bg.beginFill(0x111111, 1);
   bg.drawRect(0,0,boardWidth,gameHeight);
