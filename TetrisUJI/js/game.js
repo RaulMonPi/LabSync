@@ -209,6 +209,10 @@ let pauseWasDown = false;
 let nextShape = null;
 let previewBlocks = [];
 let pauseLabel = null;
+let matchTimerText = null;
+let FALL_DELAY = INITIAL_FALL_DELAY;
+let MATCH_DURATION_MS = 10000;
+let matchTimeLeftMs = MATCH_DURATION_MS;
 
 let timer, loop;
 let currentMovementTimer = 0;
@@ -311,6 +315,13 @@ function destroyNameEditor() {
   }
 }
 
+function updateMatchTimerText() {
+  if (!matchTimerText) return;
+
+  let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
+  matchTimerText.text = 'TIME: ' + secondsLeft;
+}
+
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
     destroyNameEditor(); //para evitar duplicados
@@ -321,6 +332,7 @@ function resetGame() {
   // initialisation
   gameOverState = false;
   currentMovementTimer = 0;
+  matchTimeLeftMs = MATCH_DURATION_MS;
 
   // Create Trellis and initialisation of its grid
   theTetris = new Tetris();
@@ -355,6 +367,13 @@ function resetGame() {
     gameHeight - 28,
     'P: Pause',
     { font: '16px MangaStyle', fill: '#cccccc' }
+  );
+
+  matchTimerText = game.add.text(
+    boardWidth + 16,
+    gameHeight - 56,
+    'TIME: 10',
+    { font: '16px MangaStyle', fill: '#ffdd00' }
   );
 
   nextShape = randomShape();
@@ -406,13 +425,15 @@ function resetGame() {
     openNameEditor();
   });
 
+  updateMatchTimerText();
+
   // timer
   // IMPORTANTE: si venimos de un game over, el Timer andará pausado.
   // Hay que reanudarlo explícitamente, o la caída se queda a 0 (no cae nunca).
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
-  loop = timer.loop(INITIAL_FALL_DELAY, fall, this);
+  loop = timer.loop(FALL_DELAY, fall, this);
 
   spawn();
 };
@@ -545,6 +566,15 @@ function updateGame() {
 
   if (editingName) return;
   if (pausedState || gameOverState) return;
+
+  matchTimeLeftMs -= this.time.elapsed;
+  if (matchTimeLeftMs <= 0) {
+    matchTimeLeftMs = 0;
+    updateMatchTimerText();
+    setGameOver(true);
+    return;
+  }
+  updateMatchTimerText();
 
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
