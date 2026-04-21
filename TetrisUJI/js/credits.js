@@ -7,6 +7,8 @@ var creditsState = {
   },
 
   create: function () {
+    if (window.setDomHudVisible) window.setDomHudVisible(false);
+
     // Background
     game.stage.backgroundColor = '#8B0000';
 

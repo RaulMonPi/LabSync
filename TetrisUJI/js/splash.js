@@ -3,6 +3,8 @@ var splashState = {
   },
 
   create: function () {
+    if (window.setDomHudVisible) window.setDomHudVisible(false);
+
     game.stage.backgroundColor = '#8B0000';
 
     var titulo = game.add.text(

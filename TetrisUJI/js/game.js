@@ -228,115 +228,78 @@ let pauseWasDown = false;
 let nextShape = null;
 let previewBlocks = [];
 let pauseLabel = null;
-let matchTimerText = null;
+let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
-let MATCH_DURATION_MS = 10000;
+let MATCH_DURATION_MS = 100000;
 let matchTimeLeftMs = MATCH_DURATION_MS;
 
 let timer, loop;
 let currentMovementTimer = 0;
 
-let playerNameText = null;
-let editNameButton = null;
-let editNamePanel = null;
-let editNameLabel = null;
-let editNameHint = null;
-let editingName = false;
-let htmlNameInput = null;
+let hudPlayer = null;
+let hudLines = null;
+let hudScore = null;
+
+let linesCompleted = 0;
+let score = 0;
+
+const SCORE_BY_LINES = {
+  1: 100,
+  2: 300,
+  3: 500,
+  4: 800
+};
 
 function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
 }
 
-function openNameEditor() {
-  if (!pausedState || gameOverState || editingName || !playerNameText) return;
+function setupDomHud() {
+  hudPlayer = document.getElementById('hud-player');
+  hudLines = document.getElementById('hud-lines');
+  hudScore = document.getElementById('hud-score');
+  hudTime = document.getElementById('hud-time');
 
-  editingName = true;
-  playerNameText.visible = false;
+  if (!hudPlayer || !hudLines || !hudScore || !hudTime) return;
 
-  htmlNameInput = document.createElement('input');
-  htmlNameInput.type = 'text';
-  htmlNameInput.maxLength = 16;
-  htmlNameInput.value = getPlayerName();
-  htmlNameInput.placeholder = 'Player';
-  htmlNameInput.autocomplete = 'off';
-  htmlNameInput.className = 'game-name-input';
+  hudPlayer.onclick = function () {
+    let proposedName = window.prompt('Introduce tu nombre', getPlayerName());
+    if (proposedName === null) return;
 
-  document.body.appendChild(htmlNameInput);
-  refreshNameInputPosition();
+    proposedName = proposedName.trim();
+    if (proposedName === '') proposedName = 'Player';
 
-  htmlNameInput.focus();
-  htmlNameInput.select();
+    localStorage.setItem('playerName', proposedName);
+    window.playerName = proposedName;
+    updateDomHud();
+  };
 
-  htmlNameInput.addEventListener('keydown', function (e) {
-    e.stopPropagation();
-
-    if (e.key === 'Enter') {
-      saveNameEditor();
-    } else if (e.key === 'Escape') {
-      closeNameEditor(false);
-    }
-  });
+  updateDomHud();
 }
 
-function saveNameEditor() {
-  if (!htmlNameInput) return;
+function setDomHudVisible(visible) {
+  let hudOverlay = document.getElementById('hud-overlay');
+  if (!hudOverlay) return;
 
-  let nombre = htmlNameInput.value.trim();
-  if (nombre === '') nombre = 'Player';
-
-  localStorage.setItem('playerName', nombre);
-  window.playerName = nombre;
-
-  if (playerNameText) {
-    playerNameText.text = 'PLAYER: ' + nombre;
-  }
-
-  closeNameEditor();
+  hudOverlay.style.display = visible ? 'flex' : 'none';
 }
 
-function closeNameEditor() {
-  if (htmlNameInput && htmlNameInput.parentNode) {
-    htmlNameInput.parentNode.removeChild(htmlNameInput);
-  }
-
-  htmlNameInput = null;
-  editingName = false;
-
-  if (playerNameText) {
-    playerNameText.visible = true;
-    playerNameText.fill = '#ffffff';
-  }
+function updateDomHud() {
+  if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
+  if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
+  if (hudScore) hudScore.textContent = 'SCORE: ' + score;
 }
 
-function refreshNameInputPosition() {
-  if (!htmlNameInput || !playerNameText) return;
-
-  let rect = game.canvas.getBoundingClientRect();
-
-  htmlNameInput.style.left = (rect.left + playerNameText.x - 2) + 'px';
-  htmlNameInput.style.top = (rect.top + playerNameText.y - 2) + 'px';
-  htmlNameInput.style.width = (playerNameText.width + 12) + 'px';
-  htmlNameInput.style.height = '28px';
-}
-
-function destroyNameEditor() {
-  if (htmlNameInput && htmlNameInput.parentNode) {
-    htmlNameInput.parentNode.removeChild(htmlNameInput);
-  }
-
-  htmlNameInput = null;
-  editingName = false;
-
-  if (playerNameText) {
-    playerNameText.visible = true;
-    playerNameText.fill = '#ffffff';
-  }
+function addScoreForClearedLines(nLines) {
+  if (nLines <= 0) return;
+  let gained = SCORE_BY_LINES[nLines] || (800 + (nLines - 4) * 400);
+  linesCompleted += nLines;
+  score += gained;
 }
 let bajado1 = false;
 let bajado2 = false;
 function updateMatchTimerText() {
-  if (!matchTimerText) return;
+  if (!hudTime) return;
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
   if (secondsLeft <= (MATCH_DURATION_MS/1000) / 2 && !bajado1) {
@@ -350,13 +313,11 @@ function updateMatchTimerText() {
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado2 = true;
   }
-  matchTimerText.text = 'TIME: ' + secondsLeft + "Velocidad: " + FALL_DELAY; // Hay q ponerlo en el HTML DOM
+  hudTime.textContent = 'TIME: ' + secondsLeft;
 }
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
-    destroyNameEditor(); //para evitar duplicados
-
   // clear all blocks
   game.world.removeAll();
 
@@ -364,6 +325,10 @@ function resetGame() {
   gameOverState = false;
   currentMovementTimer = 0;
   matchTimeLeftMs = MATCH_DURATION_MS;
+  linesCompleted = 0;
+  score = 0;
+  bajado1 = false;
+  bajado2 = false;
 
   // Create Trellis and initialisation of its grid
   theTetris = new Tetris();
@@ -386,27 +351,6 @@ function resetGame() {
     bg.lineTo(gameWidth, y*BLOCKSIZE);
   };
 
-  game.add.text(
-    boardWidth + 16,
-    20,
-    'NEXT',
-    { font: '22px MangaStyle', fill: '#ffdd00' }
-  );
-
-  game.add.text(
-    boardWidth + 16,
-    gameHeight - 28,
-    'P: Pause',
-    { font: '16px MangaStyle', fill: '#cccccc' }
-  );
-
-  matchTimerText = game.add.text(
-    boardWidth + 16,
-    gameHeight - 56,
-    'TIME: 10',
-    { font: '16px MangaStyle', fill: '#ffdd00' }
-  );
-
   nextShape = randomShape();
   updateNextPreview(nextShape);
 
@@ -426,35 +370,9 @@ function resetGame() {
   pauseLabel.visible = false;
   pausedState = false;
   pauseWasDown = false;
-
-  let currentPlayerName = getPlayerName();
-
-  playerNameText = game.add.text(
-    boardWidth + 16,
-    200,
-    'PLAYER: ' + currentPlayerName,
-    { font: '18px MangaStyle', fill: '#ffffff' }
-  );
-
-  playerNameText.inputEnabled = true;
-  playerNameText.useHandCursor = true;
-
-  playerNameText.events.onInputOver.add(function () {
-    if (pausedState && !editingName) {
-      playerNameText.fill = '#f3d9b1';
-    }
-  });
-
-  playerNameText.events.onInputOut.add(function () {
-    if (!editingName) {
-      playerNameText.fill = '#ffffff';
-    }
-  });
-
-  playerNameText.events.onInputDown.add(function () {
-    if (!pausedState) return;
-    openNameEditor();
-  });
+  setupDomHud();
+  setDomHudVisible(true);
+  updateDomHud();
 
   updateMatchTimerText();
 
@@ -531,7 +449,7 @@ function setGameOver(on){
   if (gameOverState) {
     pausedState = false;
     timer.removeAll();
-    destroyNameEditor();
+    setDomHudVisible(false);
     game.state.start('HallFame');
   }
 };
@@ -546,7 +464,6 @@ function togglePause() {
   if (pausedState) {
     timer.pause();
   } else {
-    closeNameEditor(false);
     timer.resume();
     currentMovementTimer = 0;
   }
@@ -586,8 +503,6 @@ function rotateWithWallKick(dir) {
 
 // Bucle de actualización para leer input y mover la pieza
 function updateGame() {
-  refreshNameInputPosition();
-
   let pauseIsDown = keyPause.isDown;
   if (pauseIsDown && !pauseWasDown) {
     pauseWasDown = true;
@@ -596,7 +511,6 @@ function updateGame() {
   }
   if (!pauseIsDown) pauseWasDown = false;
 
-  if (editingName) return;
   if (pausedState || gameOverState) return;
 
   matchTimeLeftMs -= this.time.elapsed;
@@ -652,8 +566,11 @@ function checkLines(candidateLines) {
       cleanLine(y);
     }
   }
-  if (collapsed.length)
+  if (collapsed.length) {
     collapse(collapsed);
+    addScoreForClearedLines(collapsed.length);
+    updateDomHud();
+  }
 };
 
 // Suma el estado de una fila para detectar si está completamente ocupada.

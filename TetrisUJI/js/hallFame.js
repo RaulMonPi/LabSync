@@ -7,6 +7,8 @@ var hallFameState = {
   },
 
   create: function () {
+    if (window.setDomHudVisible) window.setDomHudVisible(false);
+
     // Background
     game.stage.backgroundColor = '#1c1400';
 

@@ -31,6 +31,68 @@ body {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
 }
 
+#game-shell {
+  position: relative;
+  display: inline-block;
+}
+
+#hud-overlay {
+  position: absolute;
+  right: 8px;
+  top: 18px;
+  bottom: 18px;
+  width: 150px;
+  z-index: 1000;
+  pointer-events: auto;
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hud-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-section-top {
+  align-items: flex-start;
+}
+
+.hud-section-bottom {
+  align-items: flex-start;
+}
+
+.hud-item {
+  margin: 0 0 10px;
+  font-family: 'MangaStyle', sans-serif;
+  font-size: 18px;
+  color: #ffffff;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  user-select: none;
+}
+
+.hud-title {
+  color: #ffdd00;
+  font-size: 22px;
+  margin-bottom: 0;
+}
+
+.hud-help {
+  margin-top: 16px;
+  color: #cccccc;
+  font-size: 16px;
+}
+
+.hud-player {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.hud-player:hover {
+  color: #f3d9b1;
+}
+
 .splash-name-input {
   position: absolute;
   left: 50%;

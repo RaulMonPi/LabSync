@@ -10,8 +10,24 @@
 
 <body>
   <div id="wrap">
-    <div>
+    <div id="game-shell">
       <div id="game"></div>
+
+      <div id="hud-overlay" aria-label="Game HUD">
+        <div class="hud-section hud-section-top">
+          <div id="hud-next" class="hud-item hud-title">NEXT</div>
+        </div>
+
+        <div class="hud-section hud-section-bottom">
+          <div id="hud-player" class="hud-item hud-player" title="Haz click para cambiar el nombre">
+            PLAYER: Player
+          </div>
+          <div id="hud-lines" class="hud-item">LINES: 0</div>
+          <div id="hud-score" class="hud-item">SCORE: 0</div>
+          <div id="hud-time" class="hud-item">TIME: 10</div>
+          <div id="hud-controls" class="hud-item hud-help">P: Pause</div>
+        </div>
+      </div>
     </div>
   </div>
 
