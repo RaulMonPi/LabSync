@@ -226,7 +226,7 @@ let previewBlocks = [];
 let pauseLabel = null;
 let matchTimerText = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
-let MATCH_DURATION_MS = 60000;
+let MATCH_DURATION_MS = 10000;
 let matchTimeLeftMs = MATCH_DURATION_MS;
 
 let timer, loop;
@@ -460,6 +460,7 @@ function resetGame() {
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
+  FALL_DELAY = INITIAL_FALL_DELAY;
   loop = timer.loop(FALL_DELAY, fall, this);
 
   spawn();
