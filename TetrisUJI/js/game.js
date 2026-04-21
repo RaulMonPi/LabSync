@@ -8,9 +8,9 @@ const PREVIEW_PANEL_BLOCKS = 6;     // panel width in block units
 const PREVIEW_BLOCKSIZE = 18;       // px
 
 
-// 7 tetrominoes, rotation around a center cell
+// Piezas (tetrominos + extras), rotación alrededor de una celda central
 const BLOCKS_PER_TETROMINO = 4;
-const N_BLOCK_TYPES = 7;
+const N_BLOCK_TYPES = 9;
 //const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 const TETROMINO_OFFSETS = {
@@ -20,7 +20,9 @@ const TETROMINO_OFFSETS = {
   3 : [[-1,-1],[0,-1],[0,0],[-1,0]],  // O
   4 : [[-1,0],[0,0],[0,-1],[1,-1]],   // S
   5 : [[-1,0],[0,0],[1,0],[0,1]],     // T
-  6 : [[-1,-1],[0,-1],[0,0],[1,0]]    // Z
+  6 : [[-1,-1],[0,-1],[0,0],[1,0]],   // Z
+  7 : [[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0]], // Rectangulo 3x2 (6)
+  8 : [[-1,-1],[0,-1],[0,0],[1,0],[1,1],[2,1]]    // Serpiente larga (6)
 };
 
 // Color de las piezas: blanco (heredado)
@@ -34,7 +36,9 @@ const TETROMINO_COLORS = {
   3: 0xFFFF00,  // O - Amarillo
   4: 0x00CC00,  // S - Verde
   5: 0xCC00FF,  // T - Púrpura
-  6: 0xFF0000   // Z - Rojo
+  6: 0xFF0000,  // Z - Rojo
+  7: 0x19C37D,  // Rectangulo 3x2 (6) - Verde agua
+  8: 0xFF5E5B   // Serpiente larga (6) - Coral
 };
 
 function getTetrominoColor(shape) {
@@ -106,7 +110,7 @@ class Tetromino {
     this.center = [c_x, c_y];
 
     let conflict = false;
-    for (let i = 0; i < BLOCKS_PER_TETROMINO; i++) {
+    for (let i = 0; i < this.offsets[this.shape].length; i++) {
       let x = c_x + this.offsets[this.shape][i][0];
       let y = c_y + this.offsets[this.shape][i][1];
 
@@ -207,7 +211,7 @@ let boardWidth = NUMBLOCKS_X * BLOCKSIZE;
 let gameWidth  = boardWidth + (PREVIEW_PANEL_BLOCKS * BLOCKSIZE);
 let gameHeight = NUMBLOCKS_Y * BLOCKSIZE;
 
-let y_start = { 0:1, 1:1, 2:0, 3:1, 4:1, 5:0, 6:1 };
+let y_start = { 0:1, 1:1, 2:0, 3:1, 4:1, 5:0, 6:1, 7:1, 8:1 };
 
 let move_offsets = {
   left:  [-1,0],
