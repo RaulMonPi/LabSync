@@ -11,7 +11,7 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 // 7 tetrominoes, rotation around a center cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 7;
-const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
+//const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 const TETROMINO_OFFSETS = {
   0 : [[0,-1],[0,0],[0,1],[1,1]],     // L
@@ -30,6 +30,15 @@ const PIECE_COLOR = 0xFFFFFF;
 const EMPTY = 0;
 const FALLING = 1;
 const OCCUPIED = 2;
+
+function createBlockGraphic(color, size) {
+  let g = game.add.graphics(0,0);
+  g.beginFill(color, 1);
+  let m = 1;
+  g.drawRect(m, m, size - 2*m, size - 2*m);
+  g.endFill();
+  return g;
+}
 
 class Tetris {
   constructor() {
@@ -75,13 +84,7 @@ class Tetromino {
   // Dibuja el bloque mediante Graphics de Phaser (sin sprites), con un pequeño margen
   // respecto a la rejilla.
   renderBlock() {
-    let g = game.add.graphics(0,0);
-    g.beginFill(this.color, 1);
-    // tiny inset with regard to the grid
-    let m = 1;
-    g.drawRect(m, m, BLOCKSIZE - 2*m, BLOCKSIZE - 2*m);
-    g.endFill();
-    return g;
+    return createBlockGraphic(this.color, BLOCKSIZE);
   }
 
   create(c_x, c_y) {
@@ -325,33 +328,18 @@ function updateNextPreview(shape) {
   previewBlocks = [];
 
   let offsets = TETROMINO_OFFSETS[shape];
-  let minX = offsets[0][0];
-  let maxX = offsets[0][0];
-  let minY = offsets[0][1];
-  let maxY = offsets[0][1];
-
-  for (let j = 1; j < offsets.length; j++) {
-    minX = Math.min(minX, offsets[j][0]);
-    maxX = Math.max(maxX, offsets[j][0]);
-    minY = Math.min(minY, offsets[j][1]);
-    maxY = Math.max(maxY, offsets[j][1]);
-  }
-
-  let shapeWidth = (maxX - minX + 1) * PREVIEW_BLOCKSIZE;
-  let shapeHeight = (maxY - minY + 1) * PREVIEW_BLOCKSIZE;
   let panelX = boardWidth;
   let panelWidth = gameWidth - boardWidth;
-  let originX = panelX + Math.floor((panelWidth - shapeWidth) / 2);
-  let originY = 70 + Math.floor((4 * PREVIEW_BLOCKSIZE - shapeHeight) / 2);
+  let centerX = panelX + Math.floor(panelWidth / 2);
+  let centerY = 70 + (2 * PREVIEW_BLOCKSIZE);
 
   for (let k = 0; k < offsets.length; k++) {
-    let px = originX + (offsets[k][0] - minX) * PREVIEW_BLOCKSIZE;
-    let py = originY + (offsets[k][1] - minY) * PREVIEW_BLOCKSIZE;
+    let px = centerX + offsets[k][0] * PREVIEW_BLOCKSIZE;
+    let py = centerY + offsets[k][1] * PREVIEW_BLOCKSIZE;
 
-    let g = game.add.graphics(px, py);
-    g.beginFill(PIECE_COLOR, 1);
-    g.drawRect(1, 1, PREVIEW_BLOCKSIZE - 2, PREVIEW_BLOCKSIZE - 2);
-    g.endFill();
+    let g = createBlockGraphic(PIECE_COLOR, PREVIEW_BLOCKSIZE);
+    g.x = px;
+    g.y = py;
 
     previewBlocks.push(g);
   }
@@ -389,7 +377,7 @@ function rotateWithWallKick(dir) {
     return true;
   }
 
-  for (let i = 0; i < WALL_KICK_OFFSETS.length; i++) {
+  /*for (let i = 0; i < WALL_KICK_OFFSETS.length; i++) {
     let kick = WALL_KICK_OFFSETS[i];
     let kickX = kick[0];
     let kickY = kick[1];
@@ -407,7 +395,7 @@ function rotateWithWallKick(dir) {
       tetromino.move(kickedRotate, kickedCenter, dir);
       return true;
     }
-  }
+  }*/
 
   return false;
 };
