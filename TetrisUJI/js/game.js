@@ -23,8 +23,23 @@ const TETROMINO_OFFSETS = {
   6 : [[-1,-1],[0,-1],[0,0],[1,0]]    // Z
 };
 
-// Color de las piezas: blanco
-const PIECE_COLOR = 0xFFFFFF;
+// Color de las piezas: blanco (heredado)
+let PIECE_COLOR = 0xFFFFFF;
+
+// Colores de los tetrominos según su forma (estándar de Tetris)
+const TETROMINO_COLORS = {
+  0: 0xFF8C00,  // L - Naranja
+  1: 0x0066FF,  // J - Azul Oscuro
+  2: 0x00FFFF,  // I - Cian
+  3: 0xFFFF00,  // O - Amarillo
+  4: 0x00CC00,  // S - Verde
+  5: 0xCC00FF,  // T - Púrpura
+  6: 0xFF0000   // Z - Rojo
+};
+
+function getTetrominoColor(shape) {
+  return TETROMINO_COLORS[shape] || PIECE_COLOR;
+}
 
 // Scene grid values
 const EMPTY = 0;
@@ -429,7 +444,7 @@ function fall() {
 // Crea una nueva pieza en la parte superior; si colisiona al aparecer, termina la partida.
 function spawn() {
   let shape = nextShape;
-  let color = PIECE_COLOR;
+  let color = getTetrominoColor(shape);
 
   tetromino = new Tetromino(shape, color, theTetris);
 
@@ -464,7 +479,7 @@ function updateNextPreview(shape) {
     let px = centerX + offsets[k][0] * PREVIEW_BLOCKSIZE;
     let py = centerY + offsets[k][1] * PREVIEW_BLOCKSIZE;
 
-    let g = createBlockGraphic(PIECE_COLOR, PREVIEW_BLOCKSIZE);
+    let g = createBlockGraphic(getTetrominoColor(shape), PREVIEW_BLOCKSIZE);
     g.x = px;
     g.y = py;
 
