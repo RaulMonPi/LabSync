@@ -1,4 +1,4 @@
-//Pantalla de Hall of Fame (poner las puntuaciones records)
+// Credits screen
 
 var creditsState = {
 
@@ -7,10 +7,10 @@ var creditsState = {
   },
 
   create: function () {
-    // fondo
+    // Background
     game.stage.backgroundColor = '#8B0000';
 
-    // Título
+    // Title
     var titulo = game.add.text(
       game.world.centerX,
       game.world.centerY - 150,
@@ -19,7 +19,7 @@ var creditsState = {
     );
     titulo.anchor.set(0.5);
 
-    //LOS NOMBRES
+    // Names
     var btnJugarOtraVez = game.add.text(
       game.world.centerX,
       game.world.centerY -40,
@@ -47,7 +47,7 @@ var creditsState = {
     btnJugarOtraVez.anchor.set(0.5);
 
 
-    // Botón para volver a selección de niveles
+    // Button to return to the menu
     var btnJugarOtraVez = game.add.text(
       game.world.centerX +90,
       game.world.centerY +230,
@@ -57,7 +57,7 @@ var creditsState = {
     btnJugarOtraVez.anchor.set(0.5);
     btnJugarOtraVez.inputEnabled = true;
     btnJugarOtraVez.events.onInputDown.add(function () {
-      game.state.start('Levels');
+      game.state.start('Menu');
     }, this);
     btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffdd00'; }, this);
     btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);

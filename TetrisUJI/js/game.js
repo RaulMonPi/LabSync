@@ -8,7 +8,7 @@ const PREVIEW_PANEL_BLOCKS = 6;     // panel width in block units
 const PREVIEW_BLOCKSIZE = 18;       // px
 
 
-// Piezas (tetrominos + extras), rotación alrededor de una celda central
+// Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
 //const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
@@ -28,14 +28,14 @@ const TETROMINO_OFFSETS = {
 // Color de las piezas: blanco (heredado)
 let PIECE_COLOR = 0xFFFFFF;
 
-// Colores de los tetrominos según su forma (estándar de Tetris)
+// Colors for each piece shape (standard Tetris palette)
 const TETROMINO_COLORS = {
   0: 0xFF8C00,  // L - Naranja
   1: 0x0066FF,  // J - Azul Oscuro
   2: 0x00FFFF,  // I - Cian
   3: 0xFFFF00,  // O - Amarillo
   4: 0x00CC00,  // S - Verde
-  5: 0xCC00FF,  // T - Púrpura
+  5: 0xCC00FF,  // T - Purple
   6: 0xFF0000,  // Z - Rojo
   7: 0x19C37D,  // Rectangulo 3x2 (6) - Verde agua
   8: 0xFF5E5B   // Serpiente larga (6) - Coral
@@ -65,7 +65,7 @@ class Tetris {
     this.sceneBlocks = [];
   }
 
-  // Inicializa la matriz lógica del tablero y la matriz de referencias a bloques ya fijados.
+  // Initialize the logical board grid and the reference grid for locked blocks.
   initGrid() {
     for (let x = 0; x < NUMBLOCKS_X; x++) {
       let col = [];
@@ -79,7 +79,7 @@ class Tetris {
     }
   }
 
-  // Comprueba si una celda está dentro del tablero y no está ocupada por bloques ya fijados.
+  // Check whether a cell is inside the board and not occupied by locked blocks.
   validateCoordinates(x, y) {
     if (x < 0 || x >= NUMBLOCKS_X) return false;
     if (y < 0 || y >= NUMBLOCKS_Y) return false;
@@ -100,8 +100,8 @@ class Tetromino {
     this.offsets = TETROMINO_OFFSETS;
   }
 
-  // Dibuja el bloque mediante Graphics de Phaser (sin sprites), con un pequeño margen
-  // respecto a la rejilla.
+  // Draw the block using Phaser Graphics (no sprites), with a small margin
+  // from the grid.
   renderBlock() {
     return createBlockGraphic(this.color, BLOCKSIZE);
   }
@@ -130,7 +130,7 @@ class Tetromino {
     return conflict;
   }
 
-  // Verifica si la pieza puede moverse/rotar sin salirse del tablero ni chocar con bloques ocupados.
+  // Check whether the piece can move or rotate without leaving the board or hitting occupied cells.
   canMove(coordFn, dir) {
     if (gameOverState) return false;
     for(let i = 0; i < this.cells.length; i++) {
@@ -140,13 +140,13 @@ class Tetromino {
     return true;
   }
 
-  // Calcula la nueva coordenada de un bloque de la pieza al moverla en una dirección.
+  // Compute a block's new coordinate when moving the piece in a direction.
   slide(block, dir) {
     return [this.cells[block][0] + move_offsets[dir][0],
             this.cells[block][1] + move_offsets[dir][1]];
   }
 
-  // Calcula la nueva coordenada de un bloque tras rotar alrededor del centro (rotación clásica).
+  // Compute a block's new coordinate after rotating around the center (classic rotation).
   rotate(block, dir) {
     // classic rotation around center
     let c_x = this.center[0];
@@ -166,7 +166,7 @@ class Tetromino {
     return [c_x + nx, c_y + ny];
   }
 
-  // Aplica el movimiento/rotación: actualiza celdas, posiciones gráficas y el estado del tablero.
+  // Apply the movement/rotation: update cells, graphics positions, and board state.
   move(coordFn, centerFn, dir) {
     for (let i = 0; i < this.cells.length; i++) {
       let ox = this.cells[i][0];
@@ -189,7 +189,7 @@ class Tetromino {
     }
   }
 
-  // Calcula la nueva coordenada del centro de rotación al mover la pieza en una dirección.
+  // Compute the new rotation center position when moving the piece in a direction.
   slideCenter(dir) {
     return [this.center[0] + move_offsets[dir][0],
             this.center[1] + move_offsets[dir][1]];
@@ -199,7 +199,7 @@ class Tetromino {
 
 var gameState = {
   preload: function () {
-    // Aquí se cargarían assets si los hubiera
+    // Assets would be loaded here if there were any.
   },
   create: resetGame,
   update: updateGame
@@ -245,7 +245,7 @@ let editingName = false;
 let htmlNameInput = null;
 
 function getPlayerName() {
-  return localStorage.getItem('playerName') || window.playerName || 'Jugador';
+  return localStorage.getItem('playerName') || window.playerName || 'Player';
 }
 
 function openNameEditor() {
@@ -258,7 +258,7 @@ function openNameEditor() {
   htmlNameInput.type = 'text';
   htmlNameInput.maxLength = 16;
   htmlNameInput.value = getPlayerName();
-  htmlNameInput.placeholder = 'Jugador';
+  htmlNameInput.placeholder = 'Player';
   htmlNameInput.autocomplete = 'off';
   htmlNameInput.className = 'game-name-input';
 
@@ -283,7 +283,7 @@ function saveNameEditor() {
   if (!htmlNameInput) return;
 
   let nombre = htmlNameInput.value.trim();
-  if (nombre === '') nombre = 'Jugador';
+  if (nombre === '') nombre = 'Player';
 
   localStorage.setItem('playerName', nombre);
   window.playerName = nombre;

@@ -16,15 +16,23 @@ var splashState = {
     var subtitulo = game.add.text(
       game.world.centerX,
       game.world.centerY - 35,
-      'Introduce tu nombre',
+      'Enter your name',
       { font: '22px MangaStyle', fill: '#f3d9b1', align: 'center' }
     );
     subtitulo.anchor.set(0.5);
 
+    var ayuda = game.add.text(
+      game.world.centerX,
+      game.world.centerY + 95,
+      'Press ENTER to continue',
+      { font: '18px MangaStyle', fill: '#ffffff', align: 'center' }
+    );
+    ayuda.anchor.set(0.5);
+
     var inputNombre = document.createElement('input');
     inputNombre.type = 'text';
     inputNombre.maxLength = 16;
-    inputNombre.placeholder = 'Jugador';
+    inputNombre.placeholder = 'Player';
     inputNombre.value = localStorage.getItem('playerName') || '';
     inputNombre.autocomplete = 'off';
 
@@ -32,40 +40,31 @@ var splashState = {
 
     document.body.appendChild(inputNombre);
 
-    var btnJugar = game.add.text(
-      game.world.centerX,
-      game.world.centerY + 70,
-      '[ JUGAR ]',
-      { font: '28px MangaStyle', fill: '#ffffff', align: 'center' }
-    );
-    btnJugar.anchor.set(0.5);
-    btnJugar.inputEnabled = true;
-
     var canvasRect = game.canvas.getBoundingClientRect();
     var inputRect = inputNombre.getBoundingClientRect();
-    var inputCenterY = inputRect.top + (inputRect.height / 2) - canvasRect.top - 70; //Ajuste de altura del botón [JUGAR]
-
-    btnJugar.y = inputCenterY;
     //Ajuste altura caja Nombre
     inputNombre.style.top = (canvasRect.top + game.world.centerY + 70 - (inputNombre.offsetHeight / 2)) + 'px';
 
-    btnJugar.events.onInputOver.add(function () {
-      btnJugar.fill = '#f3d9b1';
-    });
-
-    btnJugar.events.onInputOut.add(function () {
-      btnJugar.fill = '#ffffff';
-    });
-
-    btnJugar.events.onInputDown.add(function () {
+    var startMenu = function () {
       var nombre = inputNombre.value.trim();
-      if (nombre === '') nombre = 'Jugador';
+      if (nombre === '') nombre = 'Player';
 
       localStorage.setItem('playerName', nombre);
       window.playerName = nombre;
 
       if (inputNombre.parentNode) inputNombre.parentNode.removeChild(inputNombre);
-      game.state.start('Levels');
+      game.state.start('Menu');
+    };
+
+    inputNombre.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startMenu();
+      }
+    });
+
+    inputNombre.addEventListener('blur', function () {
+      if (!inputNombre.value.trim()) inputNombre.value = 'Player';
     });
 
     this.nameInput = inputNombre;
