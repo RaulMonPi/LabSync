@@ -213,9 +213,108 @@ let pauseLabel = null;
 let timer, loop;
 let currentMovementTimer = 0;
 
+let playerNameText = null;
+let editNameButton = null;
+let editNamePanel = null;
+let editNameLabel = null;
+let editNameHint = null;
+let editingName = false;
+let htmlNameInput = null;
+
+function getPlayerName() {
+  return localStorage.getItem('playerName') || window.playerName || 'Jugador';
+}
+
+function openNameEditor() {
+  if (!pausedState || gameOverState || editingName || !playerNameText) return;
+
+  editingName = true;
+  playerNameText.visible = false;
+
+  htmlNameInput = document.createElement('input');
+  htmlNameInput.type = 'text';
+  htmlNameInput.maxLength = 16;
+  htmlNameInput.value = getPlayerName();
+  htmlNameInput.placeholder = 'Jugador';
+  htmlNameInput.autocomplete = 'off';
+  htmlNameInput.className = 'game-name-input';
+
+  document.body.appendChild(htmlNameInput);
+  refreshNameInputPosition();
+
+  htmlNameInput.focus();
+  htmlNameInput.select();
+
+  htmlNameInput.addEventListener('keydown', function (e) {
+    e.stopPropagation();
+
+    if (e.key === 'Enter') {
+      saveNameEditor();
+    } else if (e.key === 'Escape') {
+      closeNameEditor(false);
+    }
+  });
+}
+
+function saveNameEditor() {
+  if (!htmlNameInput) return;
+
+  let nombre = htmlNameInput.value.trim();
+  if (nombre === '') nombre = 'Jugador';
+
+  localStorage.setItem('playerName', nombre);
+  window.playerName = nombre;
+
+  if (playerNameText) {
+    playerNameText.text = 'PLAYER: ' + nombre;
+  }
+
+  closeNameEditor();
+}
+
+function closeNameEditor() {
+  if (htmlNameInput && htmlNameInput.parentNode) {
+    htmlNameInput.parentNode.removeChild(htmlNameInput);
+  }
+
+  htmlNameInput = null;
+  editingName = false;
+
+  if (playerNameText) {
+    playerNameText.visible = true;
+    playerNameText.fill = '#ffffff';
+  }
+}
+
+function refreshNameInputPosition() {
+  if (!htmlNameInput || !playerNameText) return;
+
+  let rect = game.canvas.getBoundingClientRect();
+
+  htmlNameInput.style.left = (rect.left + playerNameText.x - 2) + 'px';
+  htmlNameInput.style.top = (rect.top + playerNameText.y - 2) + 'px';
+  htmlNameInput.style.width = (playerNameText.width + 12) + 'px';
+  htmlNameInput.style.height = '28px';
+}
+
+function destroyNameEditor() {
+  if (htmlNameInput && htmlNameInput.parentNode) {
+    htmlNameInput.parentNode.removeChild(htmlNameInput);
+  }
+
+  htmlNameInput = null;
+  editingName = false;
+
+  if (playerNameText) {
+    playerNameText.visible = true;
+    playerNameText.fill = '#ffffff';
+  }
+}
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
+    destroyNameEditor(); //para evitar duplicados
+
   // clear all blocks
   game.world.removeAll();
 
@@ -277,6 +376,35 @@ function resetGame() {
   pauseLabel.visible = false;
   pausedState = false;
   pauseWasDown = false;
+
+  let currentPlayerName = getPlayerName();
+
+  playerNameText = game.add.text(
+    boardWidth + 16,
+    200,
+    'PLAYER: ' + currentPlayerName,
+    { font: '18px MangaStyle', fill: '#ffffff' }
+  );
+
+  playerNameText.inputEnabled = true;
+  playerNameText.useHandCursor = true;
+
+  playerNameText.events.onInputOver.add(function () {
+    if (pausedState && !editingName) {
+      playerNameText.fill = '#f3d9b1';
+    }
+  });
+
+  playerNameText.events.onInputOut.add(function () {
+    if (!editingName) {
+      playerNameText.fill = '#ffffff';
+    }
+  });
+
+  playerNameText.events.onInputDown.add(function () {
+    if (!pausedState) return;
+    openNameEditor();
+  });
 
   // timer
   // IMPORTANTE: si venimos de un game over, el Timer andará pausado.
@@ -350,6 +478,7 @@ function setGameOver(on){
   if (gameOverState) {
     pausedState = false;
     timer.removeAll();
+    destroyNameEditor();
     game.state.start('HallFame');
   }
 };
@@ -364,6 +493,7 @@ function togglePause() {
   if (pausedState) {
     timer.pause();
   } else {
+    closeNameEditor(false);
     timer.resume();
     currentMovementTimer = 0;
   }
@@ -403,6 +533,8 @@ function rotateWithWallKick(dir) {
 
 // Bucle de actualización para leer input y mover la pieza
 function updateGame() {
+  refreshNameInputPosition();
+
   let pauseIsDown = keyPause.isDown;
   if (pauseIsDown && !pauseWasDown) {
     pauseWasDown = true;
@@ -411,6 +543,7 @@ function updateGame() {
   }
   if (!pauseIsDown) pauseWasDown = false;
 
+  if (editingName) return;
   if (pausedState || gameOverState) return;
 
   currentMovementTimer += this.time.elapsed;
