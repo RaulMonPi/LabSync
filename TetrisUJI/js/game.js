@@ -359,6 +359,7 @@ function togglePause() {
 
   pausedState = !pausedState;
   pauseLabel.visible = pausedState;
+  game.world.bringToTop(pauseLabel);
 
   if (pausedState) {
     timer.pause();
