@@ -41,6 +41,14 @@ var splashState = {
     btnJugar.anchor.set(0.5);
     btnJugar.inputEnabled = true;
 
+    var canvasRect = game.canvas.getBoundingClientRect();
+    var inputRect = inputNombre.getBoundingClientRect();
+    var inputCenterY = inputRect.top + (inputRect.height / 2) - canvasRect.top - 70; //Ajuste de altura del botón [JUGAR]
+
+    btnJugar.y = inputCenterY;
+    //Ajuste altura caja Nombre
+    inputNombre.style.top = (canvasRect.top + game.world.centerY + 70 - (inputNombre.offsetHeight / 2)) + 'px';
+
     btnJugar.events.onInputOver.add(function () {
       btnJugar.fill = '#f3d9b1';
     });
