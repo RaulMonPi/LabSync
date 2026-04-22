@@ -36,63 +36,33 @@ var splashState = {
     inputNombre.maxLength = 16;
     inputNombre.placeholder = 'Player';
     inputNombre.value = localStorage.getItem('playerName') || '';
-    inputNombre.autocomplete = 'off';
-
     inputNombre.className = 'splash-name-input';
 
     document.body.appendChild(inputNombre);
 
     var canvasRect = game.canvas.getBoundingClientRect();
-    var inputRect = inputNombre.getBoundingClientRect();
-    //Ajuste altura caja Nombre
-    inputNombre.style.top = (canvasRect.top + game.world.centerY + 70 - (inputNombre.offsetHeight / 2)) + 'px';
-
-    var startMenu = function () {
-      var nombre = inputNombre.value.trim();
-      if (nombre === '') nombre = 'Player';
-
-      localStorage.setItem('playerName', nombre);
-      window.playerName = nombre;
-
-      if (inputNombre.parentNode) inputNombre.parentNode.removeChild(inputNombre);
-      game.state.start('Menu');
-    };
-
-    this.enterHandler = function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        startMenu();
-      }
-    };
-
-    document.addEventListener('keydown', this.enterHandler);
-
-    inputNombre.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        startMenu();
-      }
-    });
-
-    inputNombre.addEventListener('blur', function () {
-      if (!inputNombre.value.trim()) inputNombre.value = 'Player';
-    });
+    inputNombre.style.top = (canvasRect.top + game.world.centerY + 70 - inputNombre.offsetHeight / 2) + 'px';
 
     this.nameInput = inputNombre;
   },
 
-  shutdown: function () {
-    if (this.enterHandler) {
-      document.removeEventListener('keydown', this.enterHandler);
-      this.enterHandler = null;
-    }
-
-    if (this.nameInput && this.nameInput.parentNode) {
-      this.nameInput.parentNode.removeChild(this.nameInput);
-    }
-  },
-
   update: function () {
-    // no tenemos nada por ahora
+    if (this.nameInput && game.input.keyboard.isDown(Phaser.Keyboard.ENTER)) {
+      var nombre = this.nameInput.value.trim();
+
+      if (nombre === '') {
+        nombre = 'Player';
+      }
+
+      localStorage.setItem('playerName', nombre);
+      window.playerName = nombre;
+
+      if (this.nameInput.parentNode) {
+        this.nameInput.parentNode.removeChild(this.nameInput);
+      }
+
+      this.nameInput = null;
+      game.state.start('Menu');
+    }
   }
 };
