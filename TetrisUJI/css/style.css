@@ -3,6 +3,7 @@
   font-family: 'KyotoTitle';
   src: url('../assets/fonts/kyoto.ttf') format('truetype');
 }
+
 /*funete para subtitulos y textos*/
 @font-face {
   font-family: 'MangaStyle';
@@ -13,9 +14,10 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: #065d85;
+  background: url('../assets/BG/fondoEstandar.png') no-repeat center center fixed;
+  background-size: cover;
   color: #ddd;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
 }
 
 #wrap {
@@ -29,6 +31,8 @@ body {
 
 #game {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  border: 10px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
 }
 
 #game-shell {
