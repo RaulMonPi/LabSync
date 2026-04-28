@@ -11,7 +11,7 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
-//const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
+const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 const TETROMINO_OFFSETS = {
   0 : [[0,-1],[0,0],[0,1],[1,1]],     // L
@@ -135,9 +135,23 @@ class Tetromino {
     if (gameOverState) return false;
     for(let i = 0; i < this.cells.length; i++) {
       let nc = coordFn(i, dir);
-      if (!this.tetris.validateCoordinates(nc[0], nc[1])) return false;
+      if (!this.tetris.validateCoordinates(nc[0], nc[1])) 
+      {
+        return false;
+      }
     }
     return true;
+  }
+
+  // Detect collision with left/right walls for a proposed movement.
+  hitsSideWall(coordFn, dir) {
+    for (let i = 0; i < this.cells.length; i++) {
+      let nc = coordFn(i, dir);
+      if (nc[0] < 0 || nc[0] >= NUMBLOCKS_X) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Compute a block's new coordinate when moving the piece in a direction.
@@ -235,6 +249,8 @@ let matchTimeLeftMs = MATCH_DURATION_MS;
 
 let timer, loop;
 let currentMovementTimer = 0;
+const WALL_SHAKE_COOLDOWN_MS = 120;
+let lastWallShakeAt = 0;
 
 let hudPlayer = null;
 let hudLines = null;
@@ -543,9 +559,16 @@ function togglePause() {
 //tween colision
 // Efecto shake cuando colisiona con la pared !!!ARREGLARLO PARA LLAMAR A LA FUNCIÓN correctamente con el wallkick)
 function shakeBlocks() {
+  if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
+  lastWallShakeAt = game.time.now;
+
   for (let i = 0; i < tetromino.blocks.length; i++) {
     let bloque = tetromino.blocks[i];
-    let originalX = bloque.x;
+    let originalX = tetromino.cells[i][0] * BLOCKSIZE;
+
+    // Avoid stacking tweens and re-anchor to logical position to prevent visual drift.
+    game.tweens.removeFrom(bloque);
+    bloque.x = originalX;
 
     game.add.tween(bloque)
       .to({ x: originalX + 5 }, 50, Phaser.Easing.Linear.None)
@@ -562,17 +585,17 @@ function rotateWithWallKick(dir) {
     return true;
   }
 
-  /*for (let i = 0; i < WALL_KICK_OFFSETS.length; i++) {
+  for (let i = 0; i < WALL_KICK_OFFSETS.length; i++) {
     let kick = WALL_KICK_OFFSETS[i];
     let kickX = kick[0];
     let kickY = kick[1];
 
-    let kickedRotate = function (block, d) {
+    let kickedRotate = (block, d) => {
       let rotated = tetromino.rotate(block, d);
       return [rotated[0] + kickX, rotated[1] + kickY];
     };
 
-    let kickedCenter = function () {
+    let kickedCenter = () => {
       return [tetromino.center[0] + kickX, tetromino.center[1] + kickY];
     };
 
@@ -580,7 +603,7 @@ function rotateWithWallKick(dir) {
       tetromino.move(kickedRotate, kickedCenter, dir);
       return true;
     }
-  }*/
+  }
 
   shakeBlocks();
   return false;
@@ -612,10 +635,18 @@ function updateGame() {
   if (currentMovementTimer <= MOVEMENT_LAG) return;
 
 
-  if (cursors.left.isDown && tetromino.canMove(tetromino.slide.bind(tetromino), 'left')) {
-    tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'left');
-  } else if (cursors.right.isDown && tetromino.canMove(tetromino.slide.bind(tetromino), 'right')) {
-    tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'right');
+  if (cursors.left.isDown) {
+    if (tetromino.canMove(tetromino.slide.bind(tetromino), 'left')) {
+      tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'left');
+    } else if (tetromino.hitsSideWall(tetromino.slide.bind(tetromino), 'left')) {
+      shakeBlocks();
+    }
+  } else if (cursors.right.isDown) {
+    if (tetromino.canMove(tetromino.slide.bind(tetromino), 'right')) {
+      tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'right');
+    } else if (tetromino.hitsSideWall(tetromino.slide.bind(tetromino), 'right')) {
+      shakeBlocks();
+    }
   } else if (cursors.down.isDown && tetromino.canMove(tetromino.slide.bind(tetromino), 'down')) {
     tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'down');
   } else if (keyRotate.isDown) {
