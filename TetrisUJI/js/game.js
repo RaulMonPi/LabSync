@@ -381,6 +381,8 @@ let timer, loop;
 let currentMovementTimer = 0;
 const WALL_SHAKE_COOLDOWN_MS = 120;
 let lastWallShakeAt = 0;
+const ROTATE_COOLDOWN_MS = 100;
+let lastRotateAt = 0;
 
 let hudPlayer = null;
 let hudLines = null;
@@ -720,6 +722,9 @@ function shakeBlocks() {
 
 
 function rotateWithWallKick(dir) {
+  if (game.time.now - lastRotateAt < ROTATE_COOLDOWN_MS) return false;
+  lastRotateAt = game.time.now;
+
   if (tetromino.canMove(tetromino.rotate.bind(tetromino), dir)) {
     tetromino.move(tetromino.rotate.bind(tetromino), null, dir);
     return true;
