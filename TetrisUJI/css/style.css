@@ -117,7 +117,7 @@ body {
   opacity: 0.9;
 }
 
-/* .game-name-input {
+.game-name-input {
   position: absolute;
   padding: 0 6px;
   font-size: 18px;
@@ -132,4 +132,4 @@ body {
 
 .game-name-input::placeholder {
   color: #f3d9b1;
-} */
+}
