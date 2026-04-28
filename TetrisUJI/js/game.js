@@ -14,15 +14,15 @@ const N_BLOCK_TYPES = 9;
 //const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 const TETROMINO_OFFSETS = {
-  0 : [[0,-1],[0,0],[0,1],[1,1]],     // L
-  1 : [[0,-1],[0,0],[0,1],[-1,1]],    // J
-  2 : [[-1,0],[0,0],[1,0],[2,0]],     // I
-  3 : [[-1,-1],[0,-1],[0,0],[-1,0]],  // O
-  4 : [[-1,0],[0,0],[0,-1],[1,-1]],   // S
-  5 : [[-1,0],[0,0],[1,0],[0,1]],     // T
-  6 : [[-1,-1],[0,-1],[0,0],[1,0]],   // Z
-  7 : [[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0]], // Rectangulo 3x2 (6)
-  8 : [[-1,-1],[0,-1],[0,0],[1,0],[1,1],[2,1]]    // Serpiente larga (6)
+  0: [[0, -1], [0, 0], [0, 1], [1, 1]],     // L
+  1: [[0, -1], [0, 0], [0, 1], [-1, 1]],    // J
+  2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
+  3: [[-1, -1], [0, -1], [0, 0], [-1, 0]],  // O
+  4: [[-1, 0], [0, 0], [0, -1], [1, -1]],   // S
+  5: [[-1, 0], [0, 0], [1, 0], [0, 1]],     // T
+  6: [[-1, -1], [0, -1], [0, 0], [1, 0]],   // Z
+  7: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]], // Rectangulo 3x2 (6)
+  8: [[-1, -1], [0, -1], [0, 0], [1, 0], [1, 1], [2, 1]]    // Serpiente larga (6)
 };
 
 // Color de las piezas: blanco (heredado)
@@ -51,10 +51,10 @@ const FALLING = 1;
 const OCCUPIED = 2;
 
 function createBlockGraphic(color, size) {
-  let g = game.add.graphics(0,0);
+  let g = game.add.graphics(0, 0);
   g.beginFill(color, 1);
   let m = 1;
-  g.drawRect(m, m, size - 2*m, size - 2*m);
+  g.drawRect(m, m, size - 2 * m, size - 2 * m);
   g.endFill();
   return g;
 }
@@ -119,9 +119,9 @@ class Tetromino {
       b.y = y * BLOCKSIZE;
 
       this.blocks.push(b);
-      this.cells.push([x,y]);
-  
-      if (!this.tetris.validateCoordinates(x,y)) {
+      this.cells.push([x, y]);
+
+      if (!this.tetris.validateCoordinates(x, y)) {
         conflict = true;
       } else {
         this.tetris.scene[x][y] = FALLING;
@@ -133,7 +133,7 @@ class Tetromino {
   // Check whether the piece can move or rotate without leaving the board or hitting occupied cells.
   canMove(coordFn, dir) {
     if (gameOverState) return false;
-    for(let i = 0; i < this.cells.length; i++) {
+    for (let i = 0; i < this.cells.length; i++) {
       let nc = coordFn(i, dir);
       if (!this.tetris.validateCoordinates(nc[0], nc[1])) return false;
     }
@@ -143,7 +143,7 @@ class Tetromino {
   // Compute a block's new coordinate when moving the piece in a direction.
   slide(block, dir) {
     return [this.cells[block][0] + move_offsets[dir][0],
-            this.cells[block][1] + move_offsets[dir][1]];
+    this.cells[block][1] + move_offsets[dir][1]];
   }
 
   // Compute a block's new coordinate after rotating around the center (classic rotation).
@@ -192,7 +192,7 @@ class Tetromino {
   // Compute the new rotation center position when moving the piece in a direction.
   slideCenter(dir) {
     return [this.center[0] + move_offsets[dir][0],
-            this.center[1] + move_offsets[dir][1]];
+    this.center[1] + move_offsets[dir][1]];
   }
 };
 
@@ -208,15 +208,15 @@ var gameState = {
 let bg;
 
 let boardWidth = NUMBLOCKS_X * BLOCKSIZE;
-let gameWidth  = boardWidth + (PREVIEW_PANEL_BLOCKS * BLOCKSIZE);
+let gameWidth = boardWidth + (PREVIEW_PANEL_BLOCKS * BLOCKSIZE);
 let gameHeight = NUMBLOCKS_Y * BLOCKSIZE;
 
-let y_start = { 0:1, 1:1, 2:0, 3:1, 4:1, 5:0, 6:1, 7:1, 8:1 };
+let y_start = { 0: 1, 1: 1, 2: 0, 3: 1, 4: 1, 5: 0, 6: 1, 7: 1, 8: 1 };
 
 let move_offsets = {
-  left:  [-1,0],
-  down:  [0,1],
-  right: [1,0]
+  left: [-1, 0],
+  down: [0, 1],
+  right: [1, 0]
 };
 
 // Elements for the game
@@ -302,12 +302,12 @@ function updateMatchTimerText() {
   if (!hudTime) return;
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
-  if (secondsLeft <= (MATCH_DURATION_MS/1000) / 2 && !bajado1) {
+  if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
     FALL_DELAY = INITIAL_FALL_DELAY / 2;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado1 = true;
-  }else if (secondsLeft <= (MATCH_DURATION_MS/1000) / 4 && !bajado2) {
+  } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
     FALL_DELAY = INITIAL_FALL_DELAY / 4;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
@@ -318,6 +318,9 @@ function updateMatchTimerText() {
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
+  // Fondo del nivel 1
+  document.body.style.background = "url('../assets/BG/fondoNegro.png') no-repeat center center / cover fixed";
+
   // clear all blocks
   game.world.removeAll();
 
@@ -334,21 +337,21 @@ function resetGame() {
   theTetris = new Tetris();
   theTetris.initGrid();
 
-  bg = game.add.graphics(0,0);
+  bg = game.add.graphics(0, 0);
   bg.beginFill(0x111111, 1);
-  bg.drawRect(0,0,boardWidth,gameHeight);
+  bg.drawRect(0, 0, boardWidth, gameHeight);
   bg.endFill();
   bg.beginFill(0x1A1A1A, 1);
-  bg.drawRect(boardWidth,0,gameWidth - boardWidth,gameHeight);
+  bg.drawRect(boardWidth, 0, gameWidth - boardWidth, gameHeight);
   bg.endFill();
   bg.lineStyle(1, 0x1B1B1B, 1);
   for (let x = 0; x < NUMBLOCKS_X; x++) {
-    bg.moveTo(x*BLOCKSIZE, 0);
-    bg.lineTo(x*BLOCKSIZE, gameHeight);
+    bg.moveTo(x * BLOCKSIZE, 0);
+    bg.lineTo(x * BLOCKSIZE, gameHeight);
   };
   for (let y = 0; y < NUMBLOCKS_Y; y++) {
-    bg.moveTo(0, y*BLOCKSIZE);
-    bg.lineTo(gameWidth, y*BLOCKSIZE);
+    bg.moveTo(0, y * BLOCKSIZE);
+    bg.lineTo(gameWidth, y * BLOCKSIZE);
   };
 
   nextShape = randomShape();
@@ -391,19 +394,17 @@ function resetGame() {
 // Tick de caída automática: intenta bajar la pieza, o la fija si ya no puede.
 function fall() {
   if (gameOverState) return;
-  if (tetromino.canMove(tetromino.slide.bind(tetromino),'down')) {
+  if (tetromino.canMove(tetromino.slide.bind(tetromino), 'down')) {
     tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'down');
   }
-  else
-  {
-     // Tween de encaje justo al tocar fondo
-    for (let i = 0; i < tetromino.blocks.length; i++)
-      {
+  else {
+    // Tween de encaje justo al tocar fondo
+    for (let i = 0; i < tetromino.blocks.length; i++) {
       game.add.tween(tetromino.blocks[i].scale)
         .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
         .to({ x: 1.03, y: 1.03 }, 20, Phaser.Easing.Linear.None)
         .start();
-      }
+    }
 
     lockTetromino();
   }
@@ -419,7 +420,7 @@ function spawn() {
   nextShape = randomShape();
   updateNextPreview(nextShape);
 
-  let start_x = Math.floor(NUMBLOCKS_X/2);
+  let start_x = Math.floor(NUMBLOCKS_X / 2);
   let start_y = y_start[tetromino.shape];
   let conflict = tetromino.create(start_x, start_y);
   fadeInTetromino();
@@ -499,20 +500,21 @@ function clearBoardTween() {
 }
 
 // Activa el estado de fin de partida y cambia al state HallFame.
-function setGameOver(on){
+function setGameOver(on) {
   gameOverState = on;
   if (gameOverState) {
     pausedState = false;
     timer.removeAll();
     setDomHudVisible(false);
-    
+
     clearBoardTween();
 
     //para esperar a que termine
-     game.time.events.add(800, function ()
-     {
-          game.state.start('HallFame');
-     }, this);
+    game.time.events.add(800, function () {
+      // Restaurar fondo estándar al salir
+      document.body.style.background = "url('../assets/BG/fondoEstandar.png') no-repeat center center / cover fixed";
+      game.state.start('HallFame');
+    }, this);
 
 
   }
@@ -642,16 +644,16 @@ function lockTetromino() {
 
 //funcion brillo de lineas completas
 function blinkLine(lineY, times) {
-for (let x = 0; x < NUMBLOCKS_X; x++) {
-  let bloque = theTetris.sceneBlocks[x][lineY];
+  for (let x = 0; x < NUMBLOCKS_X; x++) {
+    let bloque = theTetris.sceneBlocks[x][lineY];
 
-  if (bloque) {
-    game.add.tween(bloque)
-      .to({ alpha: 0.2 }, 80, Phaser.Easing.Linear.None)
-      .to({ alpha: 0.6 }, 80, Phaser.Easing.Linear.None)
-      .start();
+    if (bloque) {
+      game.add.tween(bloque)
+        .to({ alpha: 0.2 }, 80, Phaser.Easing.Linear.None)
+        .to({ alpha: 0.6 }, 80, Phaser.Easing.Linear.None)
+        .start();
+    }
   }
-}
 }
 
 // Revisa las filas tocadas por la pieza recién fijada y aplica limpieza/colapso/puntuación.
@@ -713,8 +715,8 @@ function collapse(linesToCollapse) {
     for (let yy = y; yy > 0; yy--) {
       for (let x = 0; x < NUMBLOCKS_X; x++) {
         // shift occupancy
-        theTetris.scene[x][yy] = theTetris.scene[x][yy-1];
-        theTetris.sceneBlocks[x][yy] = theTetris.sceneBlocks[x][yy-1];
+        theTetris.scene[x][yy] = theTetris.scene[x][yy - 1];
+        theTetris.sceneBlocks[x][yy] = theTetris.sceneBlocks[x][yy - 1];
         if (theTetris.sceneBlocks[x][yy])
           theTetris.sceneBlocks[x][yy].y = yy * BLOCKSIZE;
       }
