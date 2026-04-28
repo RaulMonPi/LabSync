@@ -640,22 +640,48 @@ function lockTetromino() {
 
 };
 
+//funcion brillo de lineas completas
+function blinkLine(lineY, times) {
+for (let x = 0; x < NUMBLOCKS_X; x++) {
+  let bloque = theTetris.sceneBlocks[x][lineY];
+
+  if (bloque) {
+    game.add.tween(bloque)
+      .to({ alpha: 0.2 }, 80, Phaser.Easing.Linear.None)
+      .to({ alpha: 0.6 }, 80, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
+}
+
 // Revisa las filas tocadas por la pieza recién fijada y aplica limpieza/colapso/puntuación.
 function checkLines(candidateLines) {
   let collapsed = [];
+
   for (let i = 0; i < candidateLines.length; i++) {
     let y = candidateLines[i];
+
     if (lineSum(y) == (NUMBLOCKS_X * OCCUPIED)) {
       collapsed.push(y);
-      cleanLine(y);
+
+      blinkLine(y);
     }
   }
+
   if (collapsed.length) {
-    collapse(collapsed);
-    addScoreForClearedLines(collapsed.length);
-    updateDomHud();
+
+    game.time.events.add(300, function () {
+      for (let i = 0; i < collapsed.length; i++) {
+        cleanLine(collapsed[i]);
+      }
+
+      collapse(collapsed);
+      addScoreForClearedLines(collapsed.length);
+      updateDomHud();
+
+    }, this);
   }
-};
+}
 
 // Suma el estado de una fila para detectar si está completamente ocupada.
 function lineSum(y) {
