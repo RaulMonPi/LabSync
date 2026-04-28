@@ -279,9 +279,13 @@ function setupHUD() {
 
 function SetHudVisible(visible) {
   let hudOverlay = document.getElementById('hud-overlay');
-  if (!hudOverlay) return;
-
-  hudOverlay.style.display = visible ? 'flex' : 'none';
+  if (hudOverlay) {
+    if (visible) {
+      hudOverlay.style.display = 'flex';
+    } else {
+      hudOverlay.style.display = 'none';
+    }
+  }
 }
 
 function updateHUD() {
