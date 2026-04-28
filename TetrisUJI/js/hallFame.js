@@ -8,6 +8,7 @@ var hallFameState = {
 
   create: function () {
     if (window.setDomHudVisible) window.setDomHudVisible(false);
+    stopMusic();
 
     // Background
     game.stage.backgroundColor = '#1c1400';
@@ -31,9 +32,10 @@ var hallFameState = {
     btnJugarOtraVez.anchor.set(0.5);
     btnJugarOtraVez.inputEnabled = true;
     btnJugarOtraVez.events.onInputDown.add(function () {
+      playUiSound('button2');
       game.state.start('Menu');
     }, this);
-    btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
+    btnJugarOtraVez.events.onInputOver.add(function () { playUiSound('button1'); btnJugarOtraVez.fill = '#ffffff'; }, this);
     btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#ffdd00'; }, this);
   },
 
