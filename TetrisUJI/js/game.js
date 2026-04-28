@@ -394,7 +394,19 @@ function fall() {
   if (tetromino.canMove(tetromino.slide.bind(tetromino),'down')) {
     tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'down');
   }
-  else lockTetromino();
+  else
+  {
+     // Tween de encaje justo al tocar fondo
+    for (let i = 0; i < tetromino.blocks.length; i++)
+      {
+      game.add.tween(tetromino.blocks[i].scale)
+        .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
+        .to({ x: 1.03, y: 1.03 }, 20, Phaser.Easing.Linear.None)
+        .start();
+      }
+
+    lockTetromino();
+  }
 };
 
 // Crea una nueva pieza en la parte superior; si colisiona al aparecer, termina la partida.
@@ -410,8 +422,22 @@ function spawn() {
   let start_x = Math.floor(NUMBLOCKS_X/2);
   let start_y = y_start[tetromino.shape];
   let conflict = tetromino.create(start_x, start_y);
+  fadeInTetromino();
   if (conflict) setGameOver(true);
 };
+
+//twen cuando aparece 
+function fadeInTetromino() {
+  for (let i = 0; i < tetromino.blocks.length; i++) {
+    let bloque = tetromino.blocks[i];
+
+    bloque.alpha = 0; // empieza invisible
+
+    game.add.tween(bloque)
+      .to({ alpha: 1 }, 200, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
 
 function randomShape() {
   return Math.floor(Math.random() * N_BLOCK_TYPES);
@@ -443,6 +469,35 @@ function updateNextPreview(shape) {
   }
 };
 
+//tween gameover
+function clearBoardTween() {
+  // Bloques ya fijados en el tablero
+  for (let x = 0; x < theTetris.sceneBlocks.length; x++) {
+    for (let y = 0; y < theTetris.sceneBlocks[x].length; y++) {
+      let bloque = theTetris.sceneBlocks[x][y];
+
+      if (bloque) {
+        game.add.tween(bloque)
+          .to({ alpha: 0 }, 200, Phaser.Easing.Linear.None)
+          .delay(x * 60)
+          .start();
+      }
+    }
+  }
+
+  // Tetrominó actual que acaba de aparecer
+  if (tetromino && tetromino.blocks) {
+    for (let i = 0; i < tetromino.blocks.length; i++) {
+      let bloque = tetromino.blocks[i];
+
+      game.add.tween(bloque)
+        .to({ alpha: 0 }, 200, Phaser.Easing.Linear.None)
+        .delay(0)
+        .start();
+    }
+  }
+}
+
 // Activa el estado de fin de partida y cambia al state HallFame.
 function setGameOver(on){
   gameOverState = on;
@@ -450,7 +505,16 @@ function setGameOver(on){
     pausedState = false;
     timer.removeAll();
     setDomHudVisible(false);
-    game.state.start('HallFame');
+    
+    clearBoardTween();
+
+    //para esperar a que termine
+     game.time.events.add(800, function ()
+     {
+          game.state.start('HallFame');
+     }, this);
+
+
   }
 };
 
@@ -471,6 +535,23 @@ function togglePause() {
 
 // Intenta rotar la pieza; si choca con una pared, prueba pequeños desplazamientos laterales
 // para "empujarla" hasta una posición válida antes de cancelar la rotación.
+
+//tween colision
+// Efecto shake cuando colisiona con la pared !!!ARREGLARLO PARA LLAMAR A LA FUNCIÓN correctamente con el wallkick)
+function shakeBlocks() {
+  for (let i = 0; i < tetromino.blocks.length; i++) {
+    let bloque = tetromino.blocks[i];
+    let originalX = bloque.x;
+
+    game.add.tween(bloque)
+      .to({ x: originalX + 5 }, 50, Phaser.Easing.Linear.None)
+      .to({ x: originalX - 5 }, 50, Phaser.Easing.Linear.None)
+      .to({ x: originalX }, 50, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
+
+
 function rotateWithWallKick(dir) {
   if (tetromino.canMove(tetromino.rotate.bind(tetromino), dir)) {
     tetromino.move(tetromino.rotate.bind(tetromino), null, dir);
@@ -497,6 +578,7 @@ function rotateWithWallKick(dir) {
     }
   }*/
 
+  shakeBlocks();
   return false;
 };
 
@@ -539,6 +621,7 @@ function updateGame() {
   currentMovementTimer = 0;
 };
 
+
 // Fija la pieza actual en el tablero, comprueba líneas completas y genera la siguiente.
 function lockTetromino() {
   let touchedLines = [];
@@ -554,6 +637,7 @@ function lockTetromino() {
   }
   checkLines(touchedLines);
   spawn();
+
 };
 
 // Revisa las filas tocadas por la pieza recién fijada y aplica limpieza/colapso/puntuación.
