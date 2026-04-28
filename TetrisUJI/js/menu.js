@@ -3,6 +3,8 @@ var menuState = {
     },
 
     create: function () {
+        stopMusic();
+
         game.stage.backgroundColor = '#8B0000';
 
         var nombreJugador = localStorage.getItem('playerName') || window.playerName || 'Jugador';
@@ -32,8 +34,14 @@ var menuState = {
             );
             btn.anchor.set(0.5);
             btn.inputEnabled = true;
-            btn.events.onInputDown.add(onClick, this);
-            btn.events.onInputOver.add(function () { btn.fill = '#ffdd00'; }, this);
+            btn.events.onInputDown.add(function () {
+                playUiSound('button2');
+                onClick.call(this);
+            }, this);
+            btn.events.onInputOver.add(function () {
+                playUiSound('button1');
+                btn.fill = '#ffdd00';
+            }, this);
             btn.events.onInputOut.add(function () { btn.fill = '#ffffff'; }, this);
             return btn;
         }

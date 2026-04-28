@@ -8,6 +8,7 @@ var creditsState = {
 
   create: function () {
     if (window.setDomHudVisible) window.setDomHudVisible(false);
+    stopMusic();
 
     // Background
     game.stage.backgroundColor = '#8B0000';
@@ -59,9 +60,10 @@ var creditsState = {
     btnJugarOtraVez.anchor.set(0.5);
     btnJugarOtraVez.inputEnabled = true;
     btnJugarOtraVez.events.onInputDown.add(function () {
+      playUiSound('button2');
       game.state.start('Menu');
     }, this);
-    btnJugarOtraVez.events.onInputOver.add(function () { btnJugarOtraVez.fill = '#ffdd00'; }, this);
+    btnJugarOtraVez.events.onInputOver.add(function () { playUiSound('button1'); btnJugarOtraVez.fill = '#ffdd00'; }, this);
     btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
   },
 

@@ -59,6 +59,136 @@ function createBlockGraphic(color, size) {
   return g;
 }
 
+const AUDIO_KEYS = {
+  button1: 'Button1',
+  button2: 'Button2',
+  eating: 'Eating',
+  splashMusic: 'Fondo1',
+  gameMusicCrowd: 'Fondo2_Gente',
+  gameMusicTrack: 'Fondo2_Musica',
+  lose: 'Lose',
+  pop: 'Pop'
+};
+
+const AUDIO_VOLUMES = {
+  button1: 0.7,
+  button2: 0.65,
+  eating: 1,
+  splashMusic: 0.2,
+  gameMusicCrowd: 0.1,
+  gameMusicTrack: 0.2,
+  lose: 0.7,
+  pop: 0.5
+};
+
+let audioBank = null;
+let activeMusicKeys = [];
+
+function ensureAudioBank() {
+  if (audioBank || !game || !game.add) return audioBank;
+
+  audioBank = {
+    button1: game.add.audio(AUDIO_KEYS.button1, AUDIO_VOLUMES.button1),
+    button2: game.add.audio(AUDIO_KEYS.button2, AUDIO_VOLUMES.button2),
+    eating: game.add.audio(AUDIO_KEYS.eating, AUDIO_VOLUMES.eating),
+    splashMusic: game.add.audio(AUDIO_KEYS.splashMusic, AUDIO_VOLUMES.splashMusic),
+    gameMusicCrowd: game.add.audio(AUDIO_KEYS.gameMusicCrowd, AUDIO_VOLUMES.gameMusicCrowd),
+    gameMusicTrack: game.add.audio(AUDIO_KEYS.gameMusicTrack, AUDIO_VOLUMES.gameMusicTrack),
+    lose: game.add.audio(AUDIO_KEYS.lose, AUDIO_VOLUMES.lose),
+    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop)
+  };
+
+  return audioBank;
+}
+
+function getAudio(soundKey) {
+  let bank = ensureAudioBank();
+  return bank ? bank[soundKey] : null;
+}
+
+function playUiSound(soundKey) {
+  let sound = getAudio(soundKey);
+
+  if (sound) {
+    sound.volume = AUDIO_VOLUMES[soundKey] || 1;
+    sound.play();
+  }
+}
+
+function stopMusic() {
+  if (!activeMusicKeys.length) return;
+
+  for (let i = 0; i < activeMusicKeys.length; i++) {
+    let sound = getAudio(activeMusicKeys[i]);
+    if (sound && sound.isPlaying) {
+      sound.stop();
+    }
+  }
+
+  activeMusicKeys = [];
+}
+
+function pauseMusic() {
+  if (!activeMusicKeys.length) return;
+
+  for (let i = 0; i < activeMusicKeys.length; i++) {
+    let sound = getAudio(activeMusicKeys[i]);
+    if (sound && sound.isPlaying) {
+      sound.pause();
+    }
+  }
+}
+
+function resumeMusic() {
+  if (!activeMusicKeys.length) return;
+
+  for (let i = 0; i < activeMusicKeys.length; i++) {
+    let sound = getAudio(activeMusicKeys[i]);
+    if (sound && sound.paused) {
+      sound.resume();
+    }
+  }
+}
+
+function playLoopingMusic(soundKeys) {
+  ensureAudioBank();
+  if (!audioBank) return;
+
+  stopMusic();
+
+  for (let i = 0; i < soundKeys.length; i++) {
+    let sound = getAudio(soundKeys[i]);
+    if (sound) {
+      let volume = AUDIO_VOLUMES[soundKeys[i]] || 1;
+      sound.volume = volume;
+      sound.loopFull(volume);
+    }
+  }
+
+  activeMusicKeys = soundKeys.slice(0);
+}
+
+function startSplashMusic() {
+  playLoopingMusic(['splashMusic']);
+}
+
+function startGameMusic() {
+  playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
+}
+
+function playLoseSound() {
+  stopMusic();
+  playUiSound('lose');
+}
+
+function playPopSound() {
+  playUiSound('pop');
+}
+
+function playEatingSound() {
+  playUiSound('eating');
+}
+
 class Tetris {
   constructor() {
     this.scene = [];
@@ -325,6 +455,8 @@ function resetGame() {
   // clear all blocks
   game.world.removeAll();
 
+  startGameMusic();
+
   // initialisation
   gameOverState = false;
   currentMovementTimer = 0;
@@ -408,6 +540,8 @@ function fall() {
         .to({ x: 1.03, y: 1.03 }, 20, Phaser.Easing.Linear.None)
         .start();
       }
+
+    playPopSound();
 
     lockTetromino();
   }
@@ -509,7 +643,9 @@ function setGameOver(on){
     pausedState = false;
     timer.removeAll();
     SetHudVisible(false);
-    
+
+    playLoseSound();
+
     clearBoardTween();
 
     //para esperar a que termine
@@ -531,8 +667,10 @@ function togglePause() {
 
   if (pausedState) {
     timer.pause();
+    pauseMusic();
   } else {
     timer.resume();
+    resumeMusic();
     currentMovementTimer = 0;
   }
 };
@@ -682,6 +820,7 @@ function checkLines(candidateLines) {
       collapse(collapsed);
       addScoreForClearedLines(collapsed.length);
       updateHUD();
+      playEatingSound();
 
     }, this);
   }

@@ -1,9 +1,19 @@
 var splashState = {
   preload: function () {
+    game.load.audio('Button1', 'assets/sound/Button1.mp3');
+    game.load.audio('Button2', 'assets/sound/Button2.mp3');
+    game.load.audio('Eating', 'assets/sound/Eating.mp3');
+    game.load.audio('Fondo1', 'assets/sound/Fondo1.mp3');
+    game.load.audio('Fondo2_Gente', 'assets/sound/Fondo2_Gente.mp3');
+    game.load.audio('Fondo2_Musica', 'assets/sound/Fondo2_Musica.mp3');
+    game.load.audio('Lose', 'assets/sound/Lose.mp3');
+    game.load.audio('Pop', 'assets/sound/Pop.mp3');
   },
 
   create: function () {
     if (window.setDomHudVisible) window.setDomHudVisible(false);
+
+    startSplashMusic();
 
     game.stage.backgroundColor = '#8B0000';
 

@@ -8,6 +8,7 @@ var levelsState = {
 
   create: function () {
     if (window.setDomHudVisible) window.setDomHudVisible(false);
+    stopMusic();
 
     // Background
     game.stage.backgroundColor = '#8B0000';
@@ -32,10 +33,11 @@ var levelsState = {
     btnNivel1.inputEnabled = true;
     // Clickable button
     btnNivel1.events.onInputDown.add(function () {
+      playUiSound('button2');
       game.state.start('Game');
     }, this);
     // Hover effect
-    btnNivel1.events.onInputOver.add(function () { btnNivel1.fill = '#ffdd00'; }, this);
+    btnNivel1.events.onInputOver.add(function () { playUiSound('button1'); btnNivel1.fill = '#ffdd00'; }, this);
     btnNivel1.events.onInputOut.add(function () { btnNivel1.fill = '#ffffff'; }, this);
 
     // Level 2 does not lead anywhere yet
@@ -48,10 +50,11 @@ var levelsState = {
     btnNivel2.anchor.set(0.5);
     btnNivel2.inputEnabled = true;
     btnNivel2.events.onInputDown.add(function () {
+      playUiSound('button2');
       // Placeholder: level not implemented yet
       console.log('Level 2 — coming soon');
     }, this);
-    btnNivel2.events.onInputOver.add(function () { btnNivel2.fill = '#bbbbbb'; }, this);
+    btnNivel2.events.onInputOver.add(function () { playUiSound('button1'); btnNivel2.fill = '#bbbbbb'; }, this);
     btnNivel2.events.onInputOut.add(function () { btnNivel2.fill = '#888888'; }, this);
 
     // Level 3 does not lead anywhere yet
@@ -64,10 +67,11 @@ var levelsState = {
     btnNivel3.anchor.set(0.5);
     btnNivel3.inputEnabled = true;
     btnNivel3.events.onInputDown.add(function () {
+      playUiSound('button2');
       // Placeholder: level not implemented yet
       console.log('Level 3 — coming soon');
     }, this);
-    btnNivel3.events.onInputOver.add(function () { btnNivel3.fill = '#bbbbbb'; }, this);
+    btnNivel3.events.onInputOver.add(function () { playUiSound('button1'); btnNivel3.fill = '#bbbbbb'; }, this);
     btnNivel3.events.onInputOut.add(function () { btnNivel3.fill = '#888888'; }, this);
 
 
@@ -82,10 +86,11 @@ var levelsState = {
       btnCredits.inputEnabled = true;
       // Clickable button
       btnCredits.events.onInputDown.add(function () {
+        playUiSound('button2');
         game.state.start('credits');
       }, this);
       //efecto hover
-      btnCredits.events.onInputOver.add(function () { btnCredits.fill = '#ffdd00'; }, this);
+      btnCredits.events.onInputOver.add(function () { playUiSound('button1'); btnCredits.fill = '#ffdd00'; }, this);
       btnCredits.events.onInputOut.add(function () { btnCredits.fill = '#ffffff'; }, this);
 
 
