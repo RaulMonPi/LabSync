@@ -254,7 +254,7 @@ function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
 }
 
-function setupDomHud() {
+function setupHUD() {
   hudPlayer = document.getElementById('hud-player');
   hudLines = document.getElementById('hud-lines');
   hudScore = document.getElementById('hud-score');
@@ -271,20 +271,20 @@ function setupDomHud() {
 
     localStorage.setItem('playerName', proposedName);
     window.playerName = proposedName;
-    updateDomHud();
+    updateHUD();
   };
 
-  updateDomHud();
+  updateHUD();
 }
 
-function setDomHudVisible(visible) {
+function SetHudVisible(visible) {
   let hudOverlay = document.getElementById('hud-overlay');
   if (!hudOverlay) return;
 
   hudOverlay.style.display = visible ? 'flex' : 'none';
 }
 
-function updateDomHud() {
+function updateHUD() {
   if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
   if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
   if (hudScore) hudScore.textContent = 'SCORE: ' + score;
@@ -370,9 +370,9 @@ function resetGame() {
   pauseLabel.visible = false;
   pausedState = false;
   pauseWasDown = false;
-  setupDomHud();
-  setDomHudVisible(true);
-  updateDomHud();
+  setupHUD();
+  SetHudVisible(true);
+  updateHUD();
 
   updateMatchTimerText();
 
@@ -504,7 +504,7 @@ function setGameOver(on){
   if (gameOverState) {
     pausedState = false;
     timer.removeAll();
-    setDomHudVisible(false);
+    SetHudVisible(false);
     
     clearBoardTween();
 
@@ -677,7 +677,7 @@ function checkLines(candidateLines) {
 
       collapse(collapsed);
       addScoreForClearedLines(collapsed.length);
-      updateDomHud();
+      updateHUD();
 
     }, this);
   }
