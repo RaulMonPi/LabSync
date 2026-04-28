@@ -11,7 +11,7 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
-//const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
+const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 const TETROMINO_OFFSETS = {
   0 : [[0,-1],[0,0],[0,1],[1,1]],     // L
@@ -254,7 +254,7 @@ function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
 }
 
-function setupDomHud() {
+function setHUD() {
   hudPlayer = document.getElementById('hud-player');
   hudLines = document.getElementById('hud-lines');
   hudScore = document.getElementById('hud-score');
@@ -271,20 +271,24 @@ function setupDomHud() {
 
     localStorage.setItem('playerName', proposedName);
     window.playerName = proposedName;
-    updateDomHud();
+    updateHUD();
   };
 
-  updateDomHud();
+  updateHUD();
 }
 
-function setDomHudVisible(visible) {
+function SetHUDVisible(visible) {
   let hudOverlay = document.getElementById('hud-overlay');
-  if (!hudOverlay) return;
-
-  hudOverlay.style.display = visible ? 'flex' : 'none';
+  if (hudOverlay) {
+    if (visible) {
+      hudOverlay.style.display = 'flex';
+    } else {
+      hudOverlay.style.display = 'none';
+    }
+  }
 }
 
-function updateDomHud() {
+function updateHUD() {
   if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
   if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
   if (hudScore) hudScore.textContent = 'SCORE: ' + score;
@@ -370,9 +374,9 @@ function resetGame() {
   pauseLabel.visible = false;
   pausedState = false;
   pauseWasDown = false;
-  setupDomHud();
-  setDomHudVisible(true);
-  updateDomHud();
+  setHUD();
+  SetHUDVisible(true);
+  updateHUD();
 
   updateMatchTimerText();
 
@@ -449,7 +453,7 @@ function setGameOver(on){
   if (gameOverState) {
     pausedState = false;
     timer.removeAll();
-    setDomHudVisible(false);
+    SetHUDVisible(false);
     game.state.start('HallFame');
   }
 };
@@ -569,7 +573,7 @@ function checkLines(candidateLines) {
   if (collapsed.length) {
     collapse(collapsed);
     addScoreForClearedLines(collapsed.length);
-    updateDomHud();
+    updateHUD();
   }
 };
 
