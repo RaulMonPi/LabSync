@@ -3,7 +3,7 @@
   "time": 75,
 
   "backgroundImage": "assets/BG/fondoBlanco.png",
-  "music": ["gameMusicTrack"],
+  "music": ["gameMusicCrowd", "gameMusicLevel2"],
 
   "speedInitial": 500,
   "speedMax": 150,

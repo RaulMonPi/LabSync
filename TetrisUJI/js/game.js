@@ -54,6 +54,8 @@ const AUDIO_KEYS = {
   splashMusic: 'Fondo1',
   gameMusicCrowd: 'Fondo2_Gente',
   gameMusicTrack: 'Fondo2_Musica',
+  gameMusicLevel2: 'Fondo_Nivel2',
+  gameMusicLevel3: 'Fondo_Nivel3',
   lose: 'Lose',
   pop: 'Pop'
 };
@@ -65,6 +67,8 @@ const AUDIO_VOLUMES = {
   splashMusic: 0.2,
   gameMusicCrowd: 0.1,
   gameMusicTrack: 0.2,
+  gameMusicLevel2: 2.2,
+  gameMusicLevel3: 0.2,
   lose: 0.7,
   pop: 0.5
 };
