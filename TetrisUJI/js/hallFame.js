@@ -1,70 +1,63 @@
 // Hall of Fame screen
 
-var hallFameState = {
+class HallOfFame {
 
-  preload: function () {
-    // Cargar los assets si es necesario
-  },
+  constructor(thesize = 10) {
+    this.size = thesize;
+    this.list = [];
+  }
 
-  create: function () {
-    // Desactivar HUD
-    if (window.setDomHudVisible) window.setDomHudVisible(false);
-    stopMusic();
+  // guardar el nombre
+  addNewScore(newScore, playerName) {
+    let i;
+    for (i = 0; i < this.list.length; i++)
+      if (newScore > this.list[i].score)
+        break;
+    let instant = (new Date()).toUTCString();
+    this.list.splice(i, 0, { score: newScore, date: instant, name: playerName });
+    if (this.list.length > this.size)
+      this.list.pop();
+    if (i < this.size)
+      return i;
+    else
+      return -1;
+  }
 
-    // Fondo de la pantalla del Hall of Fame
-    game.stage.backgroundColor = '#1c1400';
+  loadFromStorage() {
+    if (localStorage.sizeHOF !== undefined)
+      this.size = JSON.parse(localStorage.sizeHOF);
+    if (localStorage.listHOF !== undefined)
+      this.list = JSON.parse(localStorage.listHOF);
+  }
 
-    // Título "Hall of Fame", centrado
-    var titulo = game.add.text(
-      game.world.centerX,
-      50,
-      'Hall of Fame',
-      { font: '48px KyotoTitle', fill: '#00FF00', align: 'center' }
-    );
-    titulo.anchor.set(0.5);
+  saveToStorage() {
+    localStorage.sizeHOF = JSON.stringify(this.size);
+    localStorage.listHOF = JSON.stringify(this.list);
+  }
 
-    // Obtener el nombre del jugador
-    let playerName = localStorage.getItem('playerName') || "Jugador";
+  resetStorage() {
+    localStorage.removeItem("sizeHOF");
+    localStorage.removeItem("listHOF");
+  }
 
-    // Mostrar nombre del jugador
-    var nameText = game.add.text(
-      game.world.centerX,
-      100,
-      'Jugador: ' + playerName,
-      { font: '24px Arial', fill: '#ffffff', align: 'center' }
-    );
-    nameText.anchor.set(0.5);
+  getSize() {
+    return this.size;
+  }
 
-    // Obtener y actualizar Highscores
-    let highscores = JSON.parse(localStorage.getItem('tetris_highscores')) || [];
-
-    if (typeof score !== 'undefined' && !window.scoreSaved) {
-      // Guardar puntuación si es > 0 o si no hay ninguna
-      if (score > 0 || highscores.length === 0) {
-        highscores.push({
-          score: score,
-          date: new Date().toUTCString(),
-          name: playerName
-        });
-      }
-      window.scoreSaved = true;
-      
-      // Ordenar por puntuación descendente
-      highscores.sort(function(a, b) {
-        return b.score - a.score;
-      });
-      
-      // Quedarse con los mejores 10
-      highscores = highscores.slice(0, 10);
-      
-      localStorage.setItem('tetris_highscores', JSON.stringify(highscores));
+  setSize(thesize) {
+    if (thesize !== undefined) {
+      this.size = thesize;
+      while (this.list.length > this.size)
+        this.list.pop();
     }
+  }
 
-    // Mostrar tabla
-    let startY = 160;
+  // textos de la tabla
+  displayOnStage(x, y, w, h) {
+    let startY = y;
     let stepY = 30;
 
-    if (highscores.length === 0) {
+    if (this.list.length === 0) {
       let msgNoScore = game.add.text(
         game.world.centerX,
         startY,
@@ -73,33 +66,33 @@ var hallFameState = {
       );
       msgNoScore.anchor.set(0.5);
     } else {
-      for (let i = 0; i < highscores.length; i++) {
-        let entry = highscores[i];
+      for (let i = 0; i < this.list.length; i++) {
+        let entry = this.list[i];
         let pos = (i + 1).toString();
         let pts = entry.score.toString();
         let date = entry.date;
-        
-        // Posición (alineado a la derecha)
+
+        // posición
         let posText = game.add.text(
-          game.world.centerX - 150,
+          game.world.centerX - 180,
           startY + (i * stepY),
           pos,
           { font: '20px Arial', fill: '#ffdd00', align: 'right' }
         );
         posText.anchor.set(1, 0.5);
 
-        // Puntuación (alineado a la derecha)
+        // puntuacion
         let ptsText = game.add.text(
-          game.world.centerX - 60,
+          game.world.centerX - 140,
           startY + (i * stepY),
           pts,
           { font: '20px Arial', fill: '#ffdd00', align: 'right' }
         );
         ptsText.anchor.set(1, 0.5);
 
-        // Fecha (alineado a la izquierda)
+        // fecha
         let dateText = game.add.text(
-          game.world.centerX - 20,
+          game.world.centerX - 100,
           startY + (i * stepY),
           date,
           { font: '20px Arial', fill: '#ffdd00', align: 'left' }
@@ -107,22 +100,90 @@ var hallFameState = {
         dateText.anchor.set(0, 0.5);
       }
     }
+  }
+}
 
-    // Mensaje de felicitación
-    if (typeof score !== 'undefined' && highscores.length > 0 && score === highscores[0].score && score > 0) {
-       var congratsText = game.add.text(
-         game.world.centerX,
-         game.world.height - 120,
-         '¡Felicidades! Has conseguido el 1º puesto.',
-         { font: '22px Arial', fill: '#00ffff', align: 'center' }
-       );
-       congratsText.anchor.set(0.5);
+function ordinalNumAbbrev(n) {
+  if (n > 0) {
+    let last = n % 10;
+    let remaining = Math.floor(n / 10);
+    let nextToLast = remaining % 10;
+    if (nextToLast === 1)
+      return 'th';
+    switch (last) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
+  return '';
+}
+
+let tetrisHOF; // Instancia global
+
+var hallFameState = {
+
+  preload: function () {
+    tetrisHOF = new HallOfFame();
+    tetrisHOF.loadFromStorage();
+  },
+
+  create: function () {
+    // desactivar HUD
+    if (window.setDomHudVisible) window.setDomHudVisible(false);
+
+    game.stage.backgroundColor = '#1c1400';
+
+    // titulo
+    var titulo = game.add.text(
+      game.world.centerX,
+      50,
+      'Hall of Fame',
+      { font: '48px KyotoTitle', fill: '#00FF00', align: 'center' }
+    );
+    titulo.anchor.set(0.5);
+
+    let playerName = localStorage.getItem('playerName') || "Jugador";
+
+    var nameText = game.add.text(
+      game.world.centerX,
+      100,
+      'Jugador: ' + playerName,
+      { font: '24px Arial', fill: '#ffffff', align: 'center' }
+    );
+    nameText.anchor.set(0.5);
+
+    let msgUser = "";
+    if (typeof score !== 'undefined' && !window.scoreSaved) {
+      // Guardamos la puntuación si es mayor q 0 o si no hay ninguna aún
+      if (score > 0 || tetrisHOF.list.length === 0) {
+        let i = tetrisHOF.addNewScore(score, playerName);
+        tetrisHOF.saveToStorage();
+        if (i >= 0 && score > 0) {
+          msgUser = "Congratulations! The " + (i + 1) + ordinalNumAbbrev(i + 1) + " place honours you.";
+        }
+      }
+      window.scoreSaved = true;
     }
 
-    // Botón [ MENU ], centrado abajo
+    tetrisHOF.displayOnStage(0, 160, game.world.width, game.world.height);
+
+    // mensaje felicitacion
+    if (msgUser !== "") {
+      var congratsText = game.add.text(
+        game.world.centerX,
+        game.world.height - 110,
+        msgUser,
+        { font: '18px Arial', fill: '#00ffff', align: 'center' }
+      );
+      congratsText.anchor.set(0.5);
+    }
+
+    // botón menu
     var btnJugarOtraVez = game.add.text(
       game.world.centerX,
-      game.world.height - 60,
+      game.world.height - 50,
       '[ MENU ]',
       { font: '26px MangaStyle', fill: '#ffdd00', align: 'center' }
     );

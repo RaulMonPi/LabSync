@@ -13,7 +13,7 @@ const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
-let TETROMINO_OFFSETS = { //el original TETROMINO_OFFSETS
+const TETROMINO_OFFSETS_ = { //el original TETROMINO_OFFSETS
   0: [[0, -1], [0, 0], [0, 1], [1, 1]],     // L
   1: [[0, -1], [0, 0], [0, 1], [-1, 1]],    // J
   2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
@@ -25,7 +25,7 @@ let TETROMINO_OFFSETS = { //el original TETROMINO_OFFSETS
   8: [[-1, -1], [0, -1], [0, 0], [1, 0], [1, 1], [2, 1]]    // Serpiente larga (6)
 };
 
-const TETROMINO_OFFSETS_DEBUG = { //TETROMINO_OFFSETS_DEBUG
+const TETROMINO_OFFSETS = { //TETROMINO_OFFSETS_DEBUG
   0: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // L
   1: [[-1, 0], [0, 0], [1, 0], [2, 0]],    // J
   2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
@@ -410,10 +410,10 @@ let comboTween = null;
 let floatingBonusFlip = false;
 
 const SCORE_BY_LINES = {
-  1: 100,
-  2: 300,
-  3: 500,
-  4: 800
+  1: 10,
+  2: 20,
+  3: 30,
+  4: 40
 };
 
 const BONUS_MULTI_LINE = {
@@ -980,7 +980,7 @@ function checkLines(candidateLines) {
       let totalPoints = basePoints + bonusPoints;
       let comboMultiplier = handleComboBonus(collapsed.length) || 0;
       if (comboMultiplier > 0) {
-        let multiplierValue = comboMultiplier / 10;
+        let multiplierValue = comboMultiplier;
         let multipliedTotal = Math.floor(totalPoints * multiplierValue);
         let comboExtra = multipliedTotal - totalPoints;
         if (comboExtra > 0) score += comboExtra;
