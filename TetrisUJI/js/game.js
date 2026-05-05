@@ -13,7 +13,7 @@ const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
-const TETROMINO_OFFSETS = { //el original TETROMINO_OFFSETS
+let TETROMINO_OFFSETS = { //el original TETROMINO_OFFSETS
   0: [[0, -1], [0, 0], [0, 1], [1, 1]],     // L
   1: [[0, -1], [0, 0], [0, 1], [-1, 1]],    // J
   2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
@@ -95,7 +95,6 @@ const AUDIO_VOLUMES = {
 
 let audioBank = null;
 let activeMusicKeys = [];
-let musicVisibilityHandlerInstalled = false;
 
 function ensureAudioBank() {
   if (audioBank || !game || !game.add) return audioBank;
@@ -185,18 +184,8 @@ function startSplashMusic() {
   playLoopingMusic(['splashMusic']);
 }
 
-function startGameMusic(levelConfig) {
-  if (!levelConfig || !Array.isArray(levelConfig.music) || !levelConfig.music.length) return;
-  if (!musicVisibilityHandlerInstalled) {
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) {
-        stopMusic();
-      }
-    });
-    window.addEventListener('blur', stopMusic);
-    musicVisibilityHandlerInstalled = true;
-  }
-  playLoopingMusic(levelConfig.music);
+function startGameMusic() {
+  playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
 }
 
 function playLoseSound() {
@@ -366,8 +355,7 @@ class Tetromino {
 
 var gameState = {
   preload: function () {
-    var levelKey = window.selectedLevelKey;
-    this.load.text(levelKey, 'assets/levels/' + levelKey + '.json');
+    // Assets would be loaded here if there were any.
   },
   create: resetGame,
   update: updateGame
@@ -398,13 +386,8 @@ let previewBlocks = [];
 let pauseLabel = null;
 let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
-let MATCH_DURATION_MS = 0;
+let MATCH_DURATION_MS = 100000;
 let matchTimeLeftMs = MATCH_DURATION_MS;
-let currentLevelConfig = null;
-
-let SPEED_INITIAL_MS = INITIAL_FALL_DELAY;
-let SPEED_MID_MS = Math.round(INITIAL_FALL_DELAY / 2);
-let SPEED_MAX_MS = Math.round(INITIAL_FALL_DELAY / 4);
 
 let timer, loop;
 let currentMovementTimer = 0;
@@ -445,15 +428,6 @@ const COMBO_SCORE_STEP = 50;
 
 function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
-}
-
-function getSelectedLevelKey() {
-  return window.selectedLevelKey || 'level1';
-}
-
-function getSelectedLevelConfig() {
-  if (!game || !game.cache) return null;
-  return JSON.parse(game.cache.getText(getSelectedLevelKey()));
 }
 
 function setupHUD() {
@@ -591,17 +565,13 @@ function updateMatchTimerText() {
   if (!hudTime) return;
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
-  // When remaining time reaches half -> set to mid speed
-  if (matchTimeLeftMs <= MATCH_DURATION_MS / 2 && !bajado1) {
-    FALL_DELAY = SPEED_MID_MS;
+  if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
+    FALL_DELAY = INITIAL_FALL_DELAY / 2;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado1 = true;
-  }
-
-  // When remaining time reaches quarter -> set to max speed
-  if (matchTimeLeftMs <= MATCH_DURATION_MS / 4 && !bajado2) {
-    FALL_DELAY = SPEED_MAX_MS;
+  } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
+    FALL_DELAY = INITIAL_FALL_DELAY / 4;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado2 = true;
@@ -611,23 +581,15 @@ function updateMatchTimerText() {
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
+  // Fondo del nivel 1
+  document.body.style.background = "url('../assets/BG/fondoNegro.png') no-repeat center center / cover fixed";
+
   // clear all blocks
   game.world.removeAll();
 
+  startGameMusic();
+
   // initialisation
-  currentLevelConfig = getSelectedLevelConfig();
-  startGameMusic(currentLevelConfig);
-  document.body.style.background = "url('" + currentLevelConfig.backgroundImage + "') no-repeat center center / cover fixed";
-  MATCH_DURATION_MS = currentLevelConfig.time * 1000;
-
-  //Configuración velocidad
-  SPEED_INITIAL_MS = Number(currentLevelConfig.speedInitial);
-  SPEED_MAX_MS = Number(currentLevelConfig.speedMax);
-  SPEED_MID_MS = Math.round((SPEED_INITIAL_MS + SPEED_MAX_MS) / 2);
-
-  console.log('Velocidad inicial: ' + SPEED_INITIAL_MS + 'ms');
-  console.log('Velocidad media: ' + SPEED_MID_MS + 'ms');
-  console.log('Velocidad máxima: ' + SPEED_MAX_MS + 'ms');
   gameOverState = false;
   currentMovementTimer = 0;
   matchTimeLeftMs = MATCH_DURATION_MS;
@@ -696,8 +658,7 @@ function resetGame() {
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
-  // Start with configured initial fall delay
-  FALL_DELAY = SPEED_INITIAL_MS;
+  FALL_DELAY = INITIAL_FALL_DELAY;
   loop = timer.loop(FALL_DELAY, fall, this);
 
   spawn();
@@ -821,7 +782,6 @@ function setGameOver(on) {
     timer.removeAll();
     SetHudVisible(false);
 
-    stopMusic();
     playLoseSound();
 
     clearBoardTween();
