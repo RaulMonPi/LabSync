@@ -13,7 +13,7 @@ const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
-const TETROMINO_OFFSETS = {
+const TETROMINO_OFFSETS = { //el original TETROMINO_OFFSETS
   0: [[0, -1], [0, 0], [0, 1], [1, 1]],     // L
   1: [[0, -1], [0, 0], [0, 1], [-1, 1]],    // J
   2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
@@ -23,6 +23,18 @@ const TETROMINO_OFFSETS = {
   6: [[-1, -1], [0, -1], [0, 0], [1, 0]],   // Z
   7: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]], // Rectangulo 3x2 (6)
   8: [[-1, -1], [0, -1], [0, 0], [1, 0], [1, 1], [2, 1]]    // Serpiente larga (6)
+};
+
+const TETROMINO_OFFSETS_DEBUG = { //TETROMINO_OFFSETS_DEBUG
+  0: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // L
+  1: [[-1, 0], [0, 0], [1, 0], [2, 0]],    // J
+  2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
+  3: [[-1, 0], [0, 0], [1, 0], [2, 0]],  // O
+  4: [[-1, 0], [0, 0], [1, 0], [2, 0]],   // S
+  5: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // T
+  6: [[-1, 0], [0, 0], [1, 0], [2, 0]],   // Z
+  7: [[-1, 0], [0, 0], [1, 0], [2, 0]], // Rectangulo 3x2 (6)
+  8: [[-1, 0], [0, 0], [1, 0], [2, 0]]    // Serpiente larga (6)
 };
 
 // Color de las piezas: blanco (heredado)
@@ -408,12 +420,28 @@ let hudScore = null;
 let linesCompleted = 0;
 let score = 0;
 
+let comboCount = 0;
+let comboExpiresAt = 0;
+let comboLabel = null;
+let comboTween = null;
+let floatingBonusFlip = false;
+
 const SCORE_BY_LINES = {
   1: 100,
   2: 300,
   3: 500,
   4: 800
 };
+
+const BONUS_MULTI_LINE = {
+  2: 150,
+  3: 300,
+  4: 500
+};
+
+const COMBO_WINDOW_MS = 10000;
+const COMBO_SHRINK_MS = 14000;
+const COMBO_SCORE_STEP = 50;
 
 function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
@@ -473,6 +501,89 @@ function addScoreForClearedLines(nLines) {
   let gained = SCORE_BY_LINES[nLines] || (800 + (nLines - 4) * 400);
   linesCompleted += nLines;
   score += gained;
+  return gained;
+}
+
+function showFloatingBonusText(text, color) {
+  floatingBonusFlip = !floatingBonusFlip;
+  let yOffset = floatingBonusFlip ? -0.06 : 0.06;
+  let baseY = gameHeight * (0.35 + yOffset);
+
+  let t = game.add.text(
+    boardWidth / 2,
+    baseY,
+    text,
+    { font: '24px KyotoTitle', fill: color, align: 'center' }
+  );
+  t.anchor.set(0.5);
+  t.alpha = 0.95;
+  game.world.bringToTop(t);
+
+  let tween = game.add.tween(t)
+    .to({ y: t.y - 48, alpha: 0 }, 2600, Phaser.Easing.Linear.None);
+
+  tween.onComplete.add(function () {
+    t.destroy();
+  });
+
+  tween.start();
+}
+
+function showComboIndicator(multiplierText) {
+  if (!comboLabel) {
+    comboLabel = game.add.text(
+      boardWidth / 2,
+      gameHeight * 0.18,
+      multiplierText,
+      { font: '36px KyotoTitle', fill: '#ffffff', align: 'center' }
+    );
+    comboLabel.anchor.set(0.5);
+  }
+
+  comboLabel.text = multiplierText;
+  comboLabel.alpha = 1;
+  comboLabel.scale.set(1.5);
+  game.world.bringToTop(comboLabel);
+
+  if (comboTween) game.tweens.remove(comboTween);
+  game.tweens.removeFrom(comboLabel.scale);
+  comboTween = game.add.tween(comboLabel)
+    .to({ alpha: 0, x: comboLabel.x, y: comboLabel.y, }, COMBO_WINDOW_MS, Phaser.Easing.Linear.None);
+
+  let scaleTween = game.add.tween(comboLabel.scale)
+    .to({ x: 0.6, y: 0.6 }, COMBO_SHRINK_MS, Phaser.Easing.Linear.None);
+
+  comboTween.onComplete.add(function () {
+    if (comboLabel) comboLabel.alpha = 0;
+  });
+
+  comboTween.start();
+  scaleTween.start();
+}
+
+function handleComboBonus(nLines) {
+  if (nLines <= 0) return 0;
+
+  let now = game.time.now;
+  if (now <= comboExpiresAt) {
+    comboCount += nLines;
+  } else {
+    comboCount = nLines;
+  }
+
+  comboExpiresAt = now + COMBO_WINDOW_MS;
+
+  let multiplierValue = comboCount * 10;
+  showComboIndicator('x' + multiplierValue);
+  return multiplierValue;
+}
+
+function handleMultiLineBonus(nLines) {
+  let bonus = BONUS_MULTI_LINE[nLines] || 0;
+  if (bonus > 0) {
+    score += bonus;
+  }
+  return bonus;
 }
 let bajado1 = false;
 let bajado2 = false;
@@ -522,6 +633,13 @@ function resetGame() {
   matchTimeLeftMs = MATCH_DURATION_MS;
   linesCompleted = 0;
   score = 0;
+  comboCount = 0;
+  comboExpiresAt = 0;
+  if (comboLabel) {
+    comboLabel.destroy();
+    comboLabel = null;
+  }
+  comboTween = null;
   bajado1 = false;
   bajado2 = false;
   window.scoreSaved = false;
@@ -897,7 +1015,18 @@ function checkLines(candidateLines) {
       }
 
       collapse(collapsed);
-      addScoreForClearedLines(collapsed.length);
+      let basePoints = addScoreForClearedLines(collapsed.length) || 0;
+      let bonusPoints = handleMultiLineBonus(collapsed.length) || 0;
+      let totalPoints = basePoints + bonusPoints;
+      let comboMultiplier = handleComboBonus(collapsed.length) || 0;
+      if (comboMultiplier > 0) {
+        let multiplierValue = comboMultiplier / 10;
+        let multipliedTotal = Math.floor(totalPoints * multiplierValue);
+        let comboExtra = multipliedTotal - totalPoints;
+        if (comboExtra > 0) score += comboExtra;
+        totalPoints = multipliedTotal;
+      }
+      showFloatingBonusText('+' + totalPoints, '#ffdd00');
       updateHUD();
       playEatingSound();
 
