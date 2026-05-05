@@ -332,6 +332,7 @@ function resetGame() {
   score = 0;
   bajado1 = false;
   bajado2 = false;
+  window.scoreSaved = false;
 
   // Create Trellis and initialisation of its grid
   theTetris = new Tetris();
