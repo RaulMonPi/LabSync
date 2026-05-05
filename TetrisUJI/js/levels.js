@@ -33,6 +33,7 @@ var levelsState = {
     btnNivel1.inputEnabled = true;
     // Clickable button
     btnNivel1.events.onInputDown.add(function () {
+      window.selectedLevelKey = 'level1';
       playUiSound('button2');
       game.state.start('Game');
     }, this);

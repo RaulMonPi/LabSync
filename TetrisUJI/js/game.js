@@ -343,7 +343,8 @@ class Tetromino {
 
 var gameState = {
   preload: function () {
-    // Assets would be loaded here if there were any.
+    var levelKey = window.selectedLevelKey || 'level1';
+    this.load.text(levelKey, 'assets/levels/' + levelKey + '.json');
   },
   create: resetGame,
   update: updateGame
@@ -374,8 +375,9 @@ let previewBlocks = [];
 let pauseLabel = null;
 let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
-let MATCH_DURATION_MS = 100000;
+let MATCH_DURATION_MS = 0;
 let matchTimeLeftMs = MATCH_DURATION_MS;
+let currentLevelConfig = null;
 
 let timer, loop;
 let currentMovementTimer = 0;
@@ -398,6 +400,15 @@ const SCORE_BY_LINES = {
 
 function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
+}
+
+function getSelectedLevelKey() {
+  return window.selectedLevelKey || 'level1';
+}
+
+function getSelectedLevelConfig() {
+  if (!game || !game.cache) return null;
+  return JSON.parse(game.cache.getText(getSelectedLevelKey()));
 }
 
 function setupHUD() {
@@ -474,6 +485,8 @@ function resetGame() {
   startGameMusic();
 
   // initialisation
+  currentLevelConfig = getSelectedLevelConfig();
+  MATCH_DURATION_MS = currentLevelConfig.time * 1000;
   gameOverState = false;
   currentMovementTimer = 0;
   matchTimeLeftMs = MATCH_DURATION_MS;
