@@ -72,6 +72,7 @@ var splashState = {
       }
 
       this.nameInput = null;
+      window.menuMusicShouldRestart = false;
       game.state.start('Menu');
     }
   }

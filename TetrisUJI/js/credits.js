@@ -61,6 +61,7 @@ var creditsState = {
     btnJugarOtraVez.inputEnabled = true;
     btnJugarOtraVez.events.onInputDown.add(function () {
       playUiSound('button2');
+      window.menuMusicShouldRestart = true;
       game.state.start('Menu');
     }, this);
     btnJugarOtraVez.events.onInputOver.add(function () { playUiSound('button1'); btnJugarOtraVez.fill = '#ffdd00'; }, this);

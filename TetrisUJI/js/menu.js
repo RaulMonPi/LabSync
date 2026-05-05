@@ -3,7 +3,10 @@ var menuState = {
     },
 
     create: function () {
-        stopMusic();
+        if (window.menuMusicShouldRestart) {
+            startSplashMusic();
+            window.menuMusicShouldRestart = false;
+        }
 
         game.stage.backgroundColor = '#8B0000';
 

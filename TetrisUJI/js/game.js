@@ -83,6 +83,7 @@ const AUDIO_VOLUMES = {
 
 let audioBank = null;
 let activeMusicKeys = [];
+let musicVisibilityHandlerInstalled = false;
 
 function ensureAudioBank() {
   if (audioBank || !game || !game.add) return audioBank;
@@ -172,8 +173,18 @@ function startSplashMusic() {
   playLoopingMusic(['splashMusic']);
 }
 
-function startGameMusic() {
-  playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
+function startGameMusic(levelConfig) {
+  if (!levelConfig || !Array.isArray(levelConfig.music) || !levelConfig.music.length) return;
+  if (!musicVisibilityHandlerInstalled) {
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        stopMusic();
+      }
+    });
+    window.addEventListener('blur', stopMusic);
+    musicVisibilityHandlerInstalled = true;
+  }
+  playLoopingMusic(levelConfig.music);
 }
 
 function playLoseSound() {
@@ -343,7 +354,7 @@ class Tetromino {
 
 var gameState = {
   preload: function () {
-    var levelKey = window.selectedLevelKey || 'level1';
+    var levelKey = window.selectedLevelKey;
     this.load.text(levelKey, 'assets/levels/' + levelKey + '.json');
   },
   create: resetGame,
@@ -378,6 +389,10 @@ let FALL_DELAY = INITIAL_FALL_DELAY;
 let MATCH_DURATION_MS = 0;
 let matchTimeLeftMs = MATCH_DURATION_MS;
 let currentLevelConfig = null;
+
+let SPEED_INITIAL_MS = INITIAL_FALL_DELAY;
+let SPEED_MID_MS = Math.round(INITIAL_FALL_DELAY / 2);
+let SPEED_MAX_MS = Math.round(INITIAL_FALL_DELAY / 4);
 
 let timer, loop;
 let currentMovementTimer = 0;
@@ -465,13 +480,17 @@ function updateMatchTimerText() {
   if (!hudTime) return;
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
-  if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
-    FALL_DELAY = INITIAL_FALL_DELAY / 2;
+  // When remaining time reaches half -> set to mid speed
+  if (matchTimeLeftMs <= MATCH_DURATION_MS / 2 && !bajado1) {
+    FALL_DELAY = SPEED_MID_MS;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado1 = true;
-  } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
-    FALL_DELAY = INITIAL_FALL_DELAY / 4;
+  }
+
+  // When remaining time reaches quarter -> set to max speed
+  if (matchTimeLeftMs <= MATCH_DURATION_MS / 4 && !bajado2) {
+    FALL_DELAY = SPEED_MAX_MS;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado2 = true;
@@ -481,17 +500,23 @@ function updateMatchTimerText() {
 
 // Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
-  // Fondo del nivel 1
-  document.body.style.background = "url('../assets/BG/fondoNegro.png') no-repeat center center / cover fixed";
-
   // clear all blocks
   game.world.removeAll();
 
-  startGameMusic();
-
   // initialisation
   currentLevelConfig = getSelectedLevelConfig();
+  startGameMusic(currentLevelConfig);
+  document.body.style.background = "url('" + currentLevelConfig.backgroundImage + "') no-repeat center center / cover fixed";
   MATCH_DURATION_MS = currentLevelConfig.time * 1000;
+
+  //Configuración velocidad
+  SPEED_INITIAL_MS = Number(currentLevelConfig.speedInitial);
+  SPEED_MAX_MS = Number(currentLevelConfig.speedMax);
+  SPEED_MID_MS = Math.round((SPEED_INITIAL_MS + SPEED_MAX_MS) / 2);
+
+  console.log('Velocidad inicial: ' + SPEED_INITIAL_MS + 'ms');
+  console.log('Velocidad media: ' + SPEED_MID_MS + 'ms');
+  console.log('Velocidad máxima: ' + SPEED_MAX_MS + 'ms');
   gameOverState = false;
   currentMovementTimer = 0;
   matchTimeLeftMs = MATCH_DURATION_MS;
@@ -553,7 +578,8 @@ function resetGame() {
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
-  FALL_DELAY = INITIAL_FALL_DELAY;
+  // Start with configured initial fall delay
+  FALL_DELAY = SPEED_INITIAL_MS;
   loop = timer.loop(FALL_DELAY, fall, this);
 
   spawn();
@@ -677,6 +703,7 @@ function setGameOver(on) {
     timer.removeAll();
     SetHudVisible(false);
 
+    stopMusic();
     playLoseSound();
 
     clearBoardTween();

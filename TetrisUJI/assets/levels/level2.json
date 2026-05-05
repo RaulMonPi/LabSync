@@ -1,0 +1,8 @@
+{
+  "level": 2,
+  "time": 75,
+  "backgroundImage": "assets/BG/fondoBlanco.png",
+  "music": ["gameMusicTrack"],
+  "speedInitial": 500,
+  "speedMax": 150
+}

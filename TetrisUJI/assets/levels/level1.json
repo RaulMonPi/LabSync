@@ -1,5 +1,12 @@
 {
   "level": 1,
   "time": 50,
-  "matchDurationMs": 100000
+  "backgroundImage": "assets/BG/fondoNegro.png",
+  "music": [
+    "gameMusicCrowd",
+    "gameMusicTrack"
+  ]
+  ,
+  "speedInitial": 600,
+  "speedMax": 200
 }

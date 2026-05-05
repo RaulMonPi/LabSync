@@ -1,0 +1,8 @@
+{
+  "level": 3,
+  "time": 100,
+  "backgroundImage": "assets/BG/fondoRojo.png",
+  "music": ["gameMusicCrowd", "gameMusicTrack"],
+  "speedInitial": 400,
+  "speedMax": 100
+}
