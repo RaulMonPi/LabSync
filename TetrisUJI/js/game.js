@@ -402,7 +402,7 @@ function fall() {
     for (let i = 0; i < tetromino.blocks.length; i++) {
       game.add.tween(tetromino.blocks[i].scale)
         .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
-        .to({ x: 1.03, y: 1.03 }, 20, Phaser.Easing.Linear.None)
+        .to({ x: 1.05, y: 1.05 }, 20, Phaser.Easing.Linear.None)
         .start();
     }
 
