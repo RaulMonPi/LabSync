@@ -1,10 +1,13 @@
 {
   "level": 2,
   "time": 75,
+
   "backgroundImage": "assets/BG/fondoBlanco.png",
   "music": ["gameMusicTrack"],
+
   "speedInitial": 500,
   "speedMax": 150,
+  
   "tetrominoOffsets": {
     "0": [[0, -1], [0, 0], [0, 1], [1, 1]],
     "1": [[0, -1], [0, 0], [0, 1], [-1, 1]],

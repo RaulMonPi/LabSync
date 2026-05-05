@@ -13,30 +13,6 @@ const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
-const TETROMINO_OFFSETS_ = { //el original TETROMINO_OFFSETS
-  0: [[0, -1], [0, 0], [0, 1], [1, 1]],     // L
-  1: [[0, -1], [0, 0], [0, 1], [-1, 1]],    // J
-  2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
-  3: [[-1, -1], [0, -1], [0, 0], [-1, 0]],  // O
-  4: [[-1, 0], [0, 0], [0, -1], [1, -1]],   // S
-  5: [[-1, 0], [0, 0], [1, 0], [0, 1]],     // T
-  6: [[-1, -1], [0, -1], [0, 0], [1, 0]],   // Z
-  7: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]], // Rectangulo 3x2 (6)
-  8: [[-1, -1], [0, -1], [0, 0], [1, 0], [1, 1], [2, 1]]    // Serpiente larga (6)
-};
-
-const TETROMINO_OFFSETS = { //TETROMINO_OFFSETS_DEBUG
-  0: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // L
-  1: [[-1, 0], [0, 0], [1, 0], [2, 0]],    // J
-  2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
-  3: [[-1, 0], [0, 0], [1, 0], [2, 0]],  // O
-  4: [[-1, 0], [0, 0], [1, 0], [2, 0]],   // S
-  5: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // T
-  6: [[-1, 0], [0, 0], [1, 0], [2, 0]],   // Z
-  7: [[-1, 0], [0, 0], [1, 0], [2, 0]], // Rectangulo 3x2 (6)
-  8: [[-1, 0], [0, 0], [1, 0], [2, 0]]    // Serpiente larga (6)
-};
-
 // Color de las piezas: blanco (heredado)
 let PIECE_COLOR = 0xFFFFFF;
 
@@ -184,8 +160,12 @@ function startSplashMusic() {
   playLoopingMusic(['splashMusic']);
 }
 
-function startGameMusic() {
-  playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
+function startGameMusic(levelConfig) {
+  if (levelConfig && levelConfig.music) {
+    playLoopingMusic(levelConfig.music);
+  } else {
+    playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
+  }
 }
 
 function playLoseSound() {
@@ -355,7 +335,8 @@ class Tetromino {
 
 var gameState = {
   preload: function () {
-    // Assets would be loaded here if there were any.
+    var levelKey = window.selectedLevelKey || 'level1';
+    this.load.text(levelKey, 'assets/levels/' + levelKey + '.json');
   },
   create: resetGame,
   update: updateGame
@@ -388,6 +369,10 @@ let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
 let MATCH_DURATION_MS = 100000;
 let matchTimeLeftMs = MATCH_DURATION_MS;
+let currentLevelConfig = null;
+let SPEED_INITIAL_MS = INITIAL_FALL_DELAY;
+let SPEED_MID_MS = Math.round(INITIAL_FALL_DELAY / 2);
+let SPEED_MAX_MS = Math.round(INITIAL_FALL_DELAY / 4);
 
 let timer, loop;
 let currentMovementTimer = 0;
@@ -566,12 +551,12 @@ function updateMatchTimerText() {
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
   if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
-    FALL_DELAY = INITIAL_FALL_DELAY / 2;
+    FALL_DELAY = SPEED_MID_MS;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado1 = true;
   } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
-    FALL_DELAY = INITIAL_FALL_DELAY / 4;
+    FALL_DELAY = SPEED_MAX_MS;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado2 = true;
@@ -579,15 +564,28 @@ function updateMatchTimerText() {
   hudTime.textContent = 'TIME: ' + secondsLeft;
 }
 
-// Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
-  // Fondo del nivel 1
-  document.body.style.background = "url('../assets/BG/fondoNegro.png') no-repeat center center / cover fixed";
-
-  // clear all blocks
   game.world.removeAll();
 
-  startGameMusic();
+  var levelKey = window.selectedLevelKey;
+  currentLevelConfig = JSON.parse(game.cache.getText(levelKey));
+  
+  startGameMusic(currentLevelConfig);
+  document.body.style.background = "url('" + currentLevelConfig.backgroundImage + "') no-repeat center center / cover fixed";
+  MATCH_DURATION_MS = currentLevelConfig.time * 1000;
+
+  SPEED_INITIAL_MS = Number(currentLevelConfig.speedInitial);
+  SPEED_MAX_MS = Number(currentLevelConfig.speedMax);
+  SPEED_MID_MS = Math.round((SPEED_INITIAL_MS + SPEED_MAX_MS) / 2);
+
+  console.log('Velocidad inicial: ' + SPEED_INITIAL_MS + 'ms');
+  console.log('Velocidad media: ' + SPEED_MID_MS + 'ms');
+  console.log('Velocidad máxima: ' + SPEED_MAX_MS + 'ms');
+
+  if (currentLevelConfig.tetrominoOffsets) {
+    TETROMINO_OFFSETS = currentLevelConfig.tetrominoOffsets;
+    console.log("length: " + TETROMINO_OFFSETS.length);
+  }
 
   // initialisation
   gameOverState = false;
@@ -658,7 +656,7 @@ function resetGame() {
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
-  FALL_DELAY = INITIAL_FALL_DELAY;
+  FALL_DELAY = SPEED_INITIAL_MS;
   loop = timer.loop(FALL_DELAY, fall, this);
 
   spawn();
