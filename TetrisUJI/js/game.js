@@ -10,7 +10,8 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
-const N_BLOCK_TYPES = 9;
+let N_BLOCK_TYPES = 9;
+//Movimientos para probar en el wall kick
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 // Color de las piezas: blanco (heredado)
@@ -382,6 +383,7 @@ const ROTATE_COOLDOWN_MS = 100;
 let lastRotateAt = 0;
 
 let hudPlayer = null;
+let hudObjective = null;
 let hudLines = null;
 let hudScore = null;
 
@@ -417,11 +419,12 @@ function getPlayerName() {
 
 function setupHUD() {
   hudPlayer = document.getElementById('hud-player');
+  hudObjective = document.getElementById('hud-objective');
   hudLines = document.getElementById('hud-lines');
   hudScore = document.getElementById('hud-score');
   hudTime = document.getElementById('hud-time');
 
-  if (!hudPlayer || !hudLines || !hudScore || !hudTime) return;
+  if (!hudPlayer || !hudObjective || !hudLines || !hudScore || !hudTime) return;
 
   hudPlayer.onclick = function () {
     let proposedName = window.prompt('Introduce tu nombre', getPlayerName());
@@ -451,8 +454,17 @@ function SetHudVisible(visible) {
 
 function updateHUD() {
   if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
+  if (hudObjective) hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
   if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
   if (hudScore) hudScore.textContent = 'SCORE: ' + score;
+}
+
+function getCurrentObjective() {
+  if (currentLevelConfig && currentLevelConfig.objetivo) {
+    return currentLevelConfig.objetivo;
+  }
+
+  return '-';
 }
 
 function addScoreForClearedLines(nLines) {
@@ -584,7 +596,12 @@ function resetGame() {
 
   if (currentLevelConfig.tetrominoOffsets) {
     TETROMINO_OFFSETS = currentLevelConfig.tetrominoOffsets;
-    console.log("length: " + TETROMINO_OFFSETS.length);
+    N_BLOCK_TYPES = Object.keys(TETROMINO_OFFSETS).length;
+    console.log("length: " + N_BLOCK_TYPES);
+  }
+
+  if (hudObjective) {
+    hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
   }
 
   // initialisation
