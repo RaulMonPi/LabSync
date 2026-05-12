@@ -1,7 +1,6 @@
 {
   "level": 3,
   "time": 100,
-  "objetivo": "Sobrevive todo lo que puedas",
   
   "backgroundImage": "assets/BG/fondoRojo.png",
   "music": ["gameMusicCrowd", "gameMusicLevel3"],

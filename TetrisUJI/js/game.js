@@ -11,7 +11,7 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
-const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
+const WALL_KICK_OFFSETS = [[-1, 0], [1, 0], [-2, 0], [2, 0]];
 
 // Color de las piezas: blanco (heredado)
 let PIECE_COLOR = 0xFFFFFF;
@@ -393,7 +393,6 @@ const ROTATE_COOLDOWN_MS = 100;
 let lastRotateAt = 0;
 
 let hudPlayer = null;
-let hudObjective = null;
 let hudLines = null;
 let hudScore = null;
 
@@ -429,12 +428,11 @@ function getPlayerName() {
 
 function setupHUD() {
   hudPlayer = document.getElementById('hud-player');
-  hudObjective = document.getElementById('hud-objective');
   hudLines = document.getElementById('hud-lines');
   hudScore = document.getElementById('hud-score');
   hudTime = document.getElementById('hud-time');
 
-  if (!hudPlayer || !hudObjective || !hudLines || !hudScore || !hudTime) return;
+  if (!hudPlayer || !hudLines || !hudScore || !hudTime) return;
 
   hudPlayer.onclick = function () {
     let proposedName = window.prompt('Introduce tu nombre', getPlayerName());
@@ -464,17 +462,8 @@ function SetHudVisible(visible) {
 
 function updateHUD() {
   if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
-  if (hudObjective) hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
   if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
   if (hudScore) hudScore.textContent = 'SCORE: ' + score;
-}
-
-function getCurrentObjective() {
-  if (currentLevelConfig && currentLevelConfig.objetivo) {
-    return currentLevelConfig.objetivo;
-  }
-
-  return '-';
 }
 
 function addScoreForClearedLines(nLines) {
@@ -566,18 +555,9 @@ function handleMultiLineBonus(nLines) {
   }
   return bonus;
 }
-
-function addTimeForClearedLines(nLines) {
-  if (nLines <= 0) return 0;
-
-  let bonusMs = nLines * 5000;
-  matchTimeLeftMs += bonusMs;
-  updateMatchTimerText();
-  return bonusMs;
-}
-
 let bajado1 = false;
 let bajado2 = false;
+let ticktockPlaying = false;
 function updateMatchTimerText() {
   if (!hudTime) return;
 
@@ -629,12 +609,7 @@ function resetGame() {
 
   if (currentLevelConfig.tetrominoOffsets) {
     TETROMINO_OFFSETS = currentLevelConfig.tetrominoOffsets;
-    N_BLOCK_TYPES = Object.keys(TETROMINO_OFFSETS).length;
-    console.log("length: " + N_BLOCK_TYPES);
-  }
-
-  if (hudObjective) {
-    hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
+    console.log("length: " + TETROMINO_OFFSETS.length);
   }
 
   // initialisation
@@ -848,19 +823,6 @@ function setGameOver(on) {
   }
 };
 
-// Verifica si estamos en nivel 1 y hemos alcanzado 5000 puntos o más
-function checkLevelObjective() {
-  // Obtener el nivel actual
-  let levelKey = window.selectedLevelKey;
-  
-  // Verificar si estamos en nivel 1
-  if (levelKey == 'level1' && linesCompleted >= 2) {
-    setGameOver(true);
-  } else if( levelKey == 'level2' && score >= 1000 ) {
-    setGameOver(true);
-  } else return;
-}
-
 function togglePause() {
   if (gameOverState) return;
 
@@ -961,9 +923,6 @@ function updateGame() {
   }
   updateMatchTimerText();
 
-  // Verificar si hemos alcanzado el objetivo del nivel
-  checkLevelObjective();
-
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
 
@@ -1054,9 +1013,6 @@ function checkLines(candidateLines) {
         let comboExtra = multipliedTotal - totalPoints;
         if (comboExtra > 0) score += comboExtra;
         totalPoints = multipliedTotal;
-      }
-      if (window.selectedLevelKey == 'level3') {
-        addTimeForClearedLines(collapsed.length);
       }
       showFloatingBonusText('+' + totalPoints, '#ffdd00');
       updateHUD();
