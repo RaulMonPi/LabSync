@@ -74,7 +74,7 @@ class HallOfFame {
 
         // posición
         let posText = game.add.text(
-          game.world.centerX - 180,
+          game.world.centerX - 190,
           startY + (i * stepY),
           pos,
           { font: '20px Arial', fill: '#ffdd00', align: 'right' }
@@ -83,7 +83,7 @@ class HallOfFame {
 
         // puntuacion
         let ptsText = game.add.text(
-          game.world.centerX - 140,
+          game.world.centerX - 120,
           startY + (i * stepY),
           pts,
           { font: '20px Arial', fill: '#ffdd00', align: 'right' }

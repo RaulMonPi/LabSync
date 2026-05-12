@@ -4,7 +4,7 @@
   "objetivo": "Consigue 1000 puntos antes de que se acabe el tiempo",
 
   "backgroundImage": "assets/BG/fondoBlanco.png",
-  "music": ["gameMusicTrack"],
+  "music": ["gameMusicCrowd", "gameMusicLevel2"],
 
   "speedInitial": 500,
   "speedMax": 150,
