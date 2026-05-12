@@ -10,7 +10,7 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
-const N_BLOCK_TYPES = 9;
+let N_BLOCK_TYPES = 9;
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
 
 // Color de las piezas: blanco (heredado)
