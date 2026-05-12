@@ -556,8 +556,19 @@ function handleMultiLineBonus(nLines) {
   }
   return bonus;
 }
+
+function addTimeForClearedLines(nLines) {
+  if (nLines <= 0) return 0;
+
+  let bonusMs = nLines * 5000;
+  matchTimeLeftMs += bonusMs;
+  updateMatchTimerText();
+  return bonusMs;
+}
+
 let bajado1 = false;
 let bajado2 = false;
+
 function updateMatchTimerText() {
   if (!hudTime) return;
 
@@ -812,6 +823,19 @@ function setGameOver(on) {
   }
 };
 
+// Verifica si estamos en nivel 1 y hemos alcanzado 5000 puntos o más
+function checkLevelObjective() {
+  // Obtener el nivel actual
+  let levelKey = window.selectedLevelKey;
+  
+  // Verificar si estamos en nivel 1
+  if (levelKey == 'level1' && linesCompleted >= 2) {
+    setGameOver(true);
+  } else if( levelKey == 'level2' && score >= 1000 ) {
+    setGameOver(true);
+  } else return;
+}
+
 function togglePause() {
   if (gameOverState) return;
 
@@ -910,6 +934,9 @@ function updateGame() {
   }
   updateMatchTimerText();
 
+  // Verificar si hemos alcanzado el objetivo del nivel
+  checkLevelObjective();
+
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
 
@@ -1000,6 +1027,9 @@ function checkLines(candidateLines) {
         let comboExtra = multipliedTotal - totalPoints;
         if (comboExtra > 0) score += comboExtra;
         totalPoints = multipliedTotal;
+      }
+      if (window.selectedLevelKey == 'level3') {
+        addTimeForClearedLines(collapsed.length);
       }
       showFloatingBonusText('+' + totalPoints, '#ffdd00');
       updateHUD();
