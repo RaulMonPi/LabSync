@@ -1026,7 +1026,7 @@ function checkLines(candidateLines) {
         if (comboExtra > 0) score += comboExtra;
         totalPoints = multipliedTotal;
       }
-      showFloatingBonusText('+' + totalPoints, '#ffdd00');
+      showFloatingBonusText('+' + totalPoints, '#f3d40c');
       updateHUD();
       playEatingSound();
 
