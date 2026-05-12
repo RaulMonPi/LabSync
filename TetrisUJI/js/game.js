@@ -460,13 +460,8 @@ function clearGhostPiece() {
 }
 
 function updateGhostPiece() {
-  if (!tetromino || !theTetris || gameOverState) {
-    clearGhostPiece();
-    return;
-  }
-
   clearGhostPiece();
-
+  //Pilla las coordenadas del tetromino actual
   let landingCells = tetromino.cells.map(function (cell) {
     return [cell[0], cell[1]];
   });
