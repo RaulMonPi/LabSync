@@ -44,9 +44,9 @@ const EMPTY = 0;
 const FALLING = 1;
 const OCCUPIED = 2;
 
-function createBlockGraphic(color, size) {
+function createBlockGraphic(color, size, alpha) {
   let g = game.add.graphics(0, 0);
-  g.beginFill(color, 1);
+  g.beginFill(color, alpha === undefined ? 1 : alpha);
   let m = 1;
   g.drawRect(m, m, size - 2 * m, size - 2 * m);
   g.endFill();
@@ -344,6 +344,8 @@ class Tetromino {
       let nc = centerFn(dir);
       this.center = [nc[0], nc[1]];
     }
+
+    updateGhostPiece();
   }
 
   // Compute the new rotation center position when moving the piece in a direction.
@@ -385,6 +387,8 @@ let pausedState = false;
 let pauseWasDown = false;
 let nextShape = null;
 let previewBlocks = [];
+let ghostBlocks = [];
+let ghostCells = [];
 let pauseLabel = null;
 let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
@@ -440,6 +444,54 @@ const COMBO_SCORE_STEP = 50;
 
 function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
+}
+
+function clearGhostPiece() {
+  for (let i = 0; i < ghostBlocks.length; i++) {
+    if (ghostBlocks[i] && ghostBlocks[i].parent) {
+      ghostBlocks[i].destroy();
+    }
+  }
+  ghostBlocks = [];
+  ghostCells = [];
+}
+
+function updateGhostPiece() {
+  if (!tetromino || !theTetris || gameOverState) {
+    clearGhostPiece();
+    return;
+  }
+
+  clearGhostPiece();
+
+  let landingCells = tetromino.cells.map(function (cell) {
+    return [cell[0], cell[1]];
+  });
+
+  let canDrop = true;
+  while (canDrop) {
+    for (let i = 0; i < landingCells.length; i++) {
+      if (!theTetris.validateCoordinates(landingCells[i][0], landingCells[i][1] + 1)) {
+        canDrop = false;
+        break;
+      }
+    }
+
+    if (canDrop) {
+      for (let j = 0; j < landingCells.length; j++) {
+        landingCells[j][1] += 1;
+      }
+    }
+  }
+
+  ghostCells = landingCells;
+
+  for (let k = 0; k < ghostCells.length; k++) {
+    let ghost = createBlockGraphic(getTetrominoColor(tetromino.shape), BLOCKSIZE, 0.28);
+    ghost.x = ghostCells[k][0] * BLOCKSIZE;
+    ghost.y = ghostCells[k][1] * BLOCKSIZE;
+    ghostBlocks.push(ghost);
+  }
 }
 
 function setupHUD() {
@@ -626,6 +678,7 @@ function updateMatchTimerText() {
 
 function resetGame() {
   game.world.removeAll();
+  clearGhostPiece();
 
   var levelKey = window.selectedLevelKey;
   currentLevelConfig = JSON.parse(game.cache.getText(levelKey));
@@ -869,6 +922,7 @@ function spawn() {
   let start_y = y_start[tetromino.shape];
   let conflict = tetromino.create(start_x, start_y);
   fadeInTetromino();
+  updateGhostPiece();
   if (conflict) setGameOver(true);
 
   windUsedForTetromino = false;
@@ -954,6 +1008,7 @@ function setGameOver(on) {
     pausedState = false;
     timer.removeAll();
     SetHudVisible(false);
+    clearGhostPiece();
 
     playLoseSound();
 
