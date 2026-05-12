@@ -59,7 +59,8 @@ const AUDIO_KEYS = {
   lose: 'Lose',
   pop: 'Pop',
   ticktock: 'Ticktock',
-  noRotation: 'NoRotation'
+  noRotation: 'NoRotation',
+  linea: 'Linea'
 };
 
 const AUDIO_VOLUMES = {
@@ -74,7 +75,8 @@ const AUDIO_VOLUMES = {
   lose: 0.7,
   pop: 0.5,
   ticktock: 0.6,
-  noRotation: 0.5
+  noRotation: 0.5,
+  linea: 0.7
 };
 
 let audioBank = null;
@@ -95,7 +97,8 @@ function ensureAudioBank() {
     lose: game.add.audio(AUDIO_KEYS.lose, AUDIO_VOLUMES.lose),
     pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop),
     ticktock: game.add.audio(AUDIO_KEYS.ticktock, AUDIO_VOLUMES.ticktock),
-    noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation)
+    noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation),
+    linea: game.add.audio(AUDIO_KEYS.linea, AUDIO_VOLUMES.linea)
   };
 
   return audioBank;
@@ -379,6 +382,9 @@ let nextShape = null;
 let previewBlocks = [];
 let ghostBlocks = [];
 let ghostCells = [];
+let completionBlinkTweens = [];
+let blinkingRows = [];
+let lineaAlertActive = false;
 let pauseLabel = null;
 let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
@@ -432,6 +438,7 @@ function getPlayerName() {
 }
 
 function clearGhostPiece() {
+  clearCompletionBlink();
   for (let i = 0; i < ghostBlocks.length; i++) {
     if (ghostBlocks[i] && ghostBlocks[i].parent) {
       ghostBlocks[i].destroy();
@@ -439,6 +446,72 @@ function clearGhostPiece() {
   }
   ghostBlocks = [];
   ghostCells = [];
+}
+
+function clearCompletionBlink() {
+  for (let i = 0; i < completionBlinkTweens.length; i++) {
+    if (completionBlinkTweens[i]) {
+      completionBlinkTweens[i].stop();
+    }
+  }
+  completionBlinkTweens = [];
+  for (let r = 0; r < blinkingRows.length; r++) {
+    let row = blinkingRows[r];
+    if (!theTetris) break;
+    for (let x = 0; x < NUMBLOCKS_X; x++) {
+      let bloque = theTetris.sceneBlocks[x][row];
+      if (bloque) bloque.alpha = 1;
+    }
+  }
+  blinkingRows = [];
+}
+
+function updateCompletionBlink() {
+  clearCompletionBlink();
+  if (!ghostCells || ghostCells.length === 0 || !theTetris) {
+    lineaAlertActive = false;
+    return;
+  }
+
+  let ghostRowSet = {};
+  for (let i = 0; i < ghostCells.length; i++) {
+    ghostRowSet[ghostCells[i][1]] = true;
+  }
+
+  let rowsToCheck = Object.keys(ghostRowSet).map(Number);
+  for (let r = 0; r < rowsToCheck.length; r++) {
+    let row = rowsToCheck[r];
+    let filledCols = {};
+    for (let x = 0; x < NUMBLOCKS_X; x++) {
+      if (theTetris.scene[x][row] === OCCUPIED) filledCols[x] = true;
+    }
+    for (let i = 0; i < ghostCells.length; i++) {
+      if (ghostCells[i][1] === row) filledCols[ghostCells[i][0]] = true;
+    }
+    if (Object.keys(filledCols).length === NUMBLOCKS_X) {
+      blinkingRows.push(row);
+      for (let x = 0; x < NUMBLOCKS_X; x++) {
+        let bloque = theTetris.sceneBlocks[x][row];
+        if (bloque) {
+          let tween = game.add.tween(bloque)
+            .to({ alpha: 0.25 }, 180, Phaser.Easing.Linear.None)
+            .to({ alpha: 1.0 }, 180, Phaser.Easing.Linear.None);
+          tween.repeatAll(-1);
+          tween.start();
+          completionBlinkTweens.push(tween);
+        }
+      }
+    }
+  }
+
+  if (blinkingRows.length > 0) {
+    if (!lineaAlertActive) {
+      lineaAlertActive = true;
+      playUiSound('linea');
+    }
+  } else {
+    lineaAlertActive = false;
+  }
 }
 
 function updateGhostPiece() {
@@ -477,6 +550,8 @@ function updateGhostPiece() {
     ghost.y = ghostCells[k][1] * BLOCKSIZE;
     ghostBlocks.push(ghost);
   }
+
+  updateCompletionBlink();
 }
 
 function setupHUD() {
