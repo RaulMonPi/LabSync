@@ -11,7 +11,7 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
 const N_BLOCK_TYPES = 9;
-const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
+const WALL_KICK_OFFSETS = [[-1, 0], [1, 0], [-2, 0], [2, 0]];
 
 // Color de las piezas: blanco (heredado)
 let PIECE_COLOR = 0xFFFFFF;
@@ -57,7 +57,9 @@ const AUDIO_KEYS = {
   gameMusicLevel2: 'Fondo_Nivel2',
   gameMusicLevel3: 'Fondo_Nivel3',
   lose: 'Lose',
-  pop: 'Pop'
+  pop: 'Pop',
+  ticktock: 'Ticktock',
+  noRotation: 'NoRotation'
 };
 
 const AUDIO_VOLUMES = {
@@ -70,7 +72,9 @@ const AUDIO_VOLUMES = {
   gameMusicLevel2: 2.2,
   gameMusicLevel3: 0.2,
   lose: 0.7,
-  pop: 0.5
+  pop: 0.5,
+  ticktock: 0.6,
+  noRotation: 0.5
 };
 
 let audioBank = null;
@@ -86,8 +90,12 @@ function ensureAudioBank() {
     splashMusic: game.add.audio(AUDIO_KEYS.splashMusic, AUDIO_VOLUMES.splashMusic),
     gameMusicCrowd: game.add.audio(AUDIO_KEYS.gameMusicCrowd, AUDIO_VOLUMES.gameMusicCrowd),
     gameMusicTrack: game.add.audio(AUDIO_KEYS.gameMusicTrack, AUDIO_VOLUMES.gameMusicTrack),
+    gameMusicLevel2: game.add.audio(AUDIO_KEYS.gameMusicLevel2, AUDIO_VOLUMES.gameMusicLevel2),
+    gameMusicLevel3: game.add.audio(AUDIO_KEYS.gameMusicLevel3, AUDIO_VOLUMES.gameMusicLevel3),
     lose: game.add.audio(AUDIO_KEYS.lose, AUDIO_VOLUMES.lose),
-    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop)
+    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop),
+    ticktock: game.add.audio(AUDIO_KEYS.ticktock, AUDIO_VOLUMES.ticktock),
+    noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation)
   };
 
   return audioBank;
@@ -261,8 +269,7 @@ class Tetromino {
     if (gameOverState) return false;
     for (let i = 0; i < this.cells.length; i++) {
       let nc = coordFn(i, dir);
-      if (!this.tetris.validateCoordinates(nc[0], nc[1])) 
-      {
+      if (!this.tetris.validateCoordinates(nc[0], nc[1])) {
         return false;
       }
     }
@@ -550,6 +557,7 @@ function handleMultiLineBonus(nLines) {
 }
 let bajado1 = false;
 let bajado2 = false;
+let ticktockPlaying = false;
 function updateMatchTimerText() {
   if (!hudTime) return;
 
@@ -565,6 +573,19 @@ function updateMatchTimerText() {
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado2 = true;
   }
+  if (secondsLeft <= 10 && secondsLeft > 0 && !ticktockPlaying) {
+    let tt = getAudio('ticktock');
+    if (tt) {
+      tt.volume = AUDIO_VOLUMES.ticktock;
+      tt.loopFull(AUDIO_VOLUMES.ticktock);
+    }
+    ticktockPlaying = true;
+  }
+  if (secondsLeft === 0 && ticktockPlaying) {
+    let tt = getAudio('ticktock');
+    if (tt && tt.isPlaying) tt.stop();
+    ticktockPlaying = false;
+  }
   hudTime.textContent = 'TIME: ' + secondsLeft;
 }
 
@@ -573,7 +594,7 @@ function resetGame() {
 
   var levelKey = window.selectedLevelKey;
   currentLevelConfig = JSON.parse(game.cache.getText(levelKey));
-  
+
   startGameMusic(currentLevelConfig);
   document.body.style.background = "url('" + currentLevelConfig.backgroundImage + "') no-repeat center center / cover fixed";
   MATCH_DURATION_MS = currentLevelConfig.time * 1000;
@@ -606,6 +627,9 @@ function resetGame() {
   comboTween = null;
   bajado1 = false;
   bajado2 = false;
+  ticktockPlaying = false;
+  let ttReset = getAudio('ticktock');
+  if (ttReset && ttReset.isPlaying) ttReset.stop();
   window.scoreSaved = false;
 
   // Create Trellis and initialisation of its grid
@@ -824,6 +848,8 @@ function togglePause() {
 function shakeBlocks() {
   if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
   lastWallShakeAt = game.time.now;
+
+  playUiSound('noRotation');
 
   for (let i = 0; i < tetromino.blocks.length; i++) {
     let bloque = tetromino.blocks[i];

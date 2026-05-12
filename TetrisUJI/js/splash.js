@@ -10,6 +10,8 @@ var splashState = {
     game.load.audio('Fondo_Nivel3', 'assets/sound/Fondo_Nivel3.mp3');
     game.load.audio('Lose', 'assets/sound/Lose.mp3');
     game.load.audio('Pop', 'assets/sound/Pop.mp3');
+    game.load.audio('Ticktock', 'assets/sound/ticktock.wav');
+    game.load.audio('NoRotation', 'assets/sound/no_rotation.mp3');
   },
 
   create: function () {
