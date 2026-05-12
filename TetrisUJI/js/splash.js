@@ -6,8 +6,12 @@ var splashState = {
     game.load.audio('Fondo1', 'assets/sound/Fondo1.mp3');
     game.load.audio('Fondo2_Gente', 'assets/sound/Fondo2_Gente.mp3');
     game.load.audio('Fondo2_Musica', 'assets/sound/Fondo2_Musica.mp3');
+    game.load.audio('Fondo_Nivel2', 'assets/sound/Fondo_Nivel2.mp3');
+    game.load.audio('Fondo_Nivel3', 'assets/sound/Fondo_Nivel3.mp3');
     game.load.audio('Lose', 'assets/sound/Lose.mp3');
     game.load.audio('Pop', 'assets/sound/Pop.mp3');
+    game.load.audio('Ticktock', 'assets/sound/ticktock.wav');
+    game.load.audio('NoRotation', 'assets/sound/no_rotation.mp3');
   },
 
   create: function () {

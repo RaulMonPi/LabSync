@@ -1,8 +1,23 @@
 {
   "level": 3,
   "time": 100,
+  "objetivo": "Sobrevive todo lo que puedas",
+  
   "backgroundImage": "assets/BG/fondoRojo.png",
-  "music": ["gameMusicCrowd", "gameMusicTrack"],
+  "music": ["gameMusicCrowd", "gameMusicLevel3"],
+
   "speedInitial": 400,
-  "speedMax": 100
+  "speedMax": 100,
+
+  "tetrominoOffsets": {
+    "0": [[0, -1], [0, 0], [0, 1], [1, 1]],
+    "1": [[0, -1], [0, 0], [0, 1], [-1, 1]],
+    "2": [[-1, 0], [0, 0], [1, 0], [2, 0]],
+    "3": [[-1, -1], [0, -1], [0, 0], [-1, 0]],
+    "4": [[-1, 0], [0, 0], [0, -1], [1, -1]],
+    "5": [[-1, 0], [0, 0], [1, 0], [0, 1]],
+    "6": [[-1, -1], [0, -1], [0, 0], [1, 0]],
+    "7": [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]],
+    "8": [[-1, -1], [0, -1], [0, 0], [1, 0], [1, 1], [2, 1]]
+  }
 }

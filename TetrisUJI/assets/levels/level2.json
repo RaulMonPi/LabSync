@@ -1,8 +1,22 @@
 {
   "level": 2,
   "time": 75,
+  "objetivo": "Consigue 1000 puntos antes de que se acabe el tiempo",
+
   "backgroundImage": "assets/BG/fondoBlanco.png",
-  "music": ["gameMusicTrack"],
+  "music": ["gameMusicCrowd", "gameMusicLevel2"],
+
   "speedInitial": 500,
-  "speedMax": 150
+  "speedMax": 150,
+  
+  "tetrominoOffsets": {
+    "0": [[0, -1], [0, 0], [0, 1], [1, 1]],
+    "1": [[0, -1], [0, 0], [0, 1], [-1, 1]],
+    "2": [[-1, 0], [0, 0], [1, 0], [2, 0]],
+    "3": [[-1, -1], [0, -1], [0, 0], [-1, 0]],
+    "4": [[-1, 0], [0, 0], [0, -1], [1, -1]],
+    "5": [[-1, 0], [0, 0], [1, 0], [0, 1]],
+    "6": [[-1, -1], [0, -1], [0, 0], [1, 0]],
+    "7": [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]]
+  }
 }

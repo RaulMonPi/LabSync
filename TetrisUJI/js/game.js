@@ -10,32 +10,8 @@ const PREVIEW_BLOCKSIZE = 18;       // px
 
 // Pieces (tetrominoes + extras), rotated around a central cell
 const BLOCKS_PER_TETROMINO = 4;
-const N_BLOCK_TYPES = 9;
+let N_BLOCK_TYPES = 9;
 const WALL_KICK_OFFSETS = [[-1,0],[1,0],[-2,0],[2,0]];
-
-const TETROMINO_OFFSETS_ = { //el original TETROMINO_OFFSETS
-  0: [[0, -1], [0, 0], [0, 1], [1, 1]],     // L
-  1: [[0, -1], [0, 0], [0, 1], [-1, 1]],    // J
-  2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
-  3: [[-1, -1], [0, -1], [0, 0], [-1, 0]],  // O
-  4: [[-1, 0], [0, 0], [0, -1], [1, -1]],   // S
-  5: [[-1, 0], [0, 0], [1, 0], [0, 1]],     // T
-  6: [[-1, -1], [0, -1], [0, 0], [1, 0]],   // Z
-  7: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]], // Rectangulo 3x2 (6)
-  8: [[-1, -1], [0, -1], [0, 0], [1, 0], [1, 1], [2, 1]]    // Serpiente larga (6)
-};
-
-const TETROMINO_OFFSETS = { //TETROMINO_OFFSETS_DEBUG
-  0: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // L
-  1: [[-1, 0], [0, 0], [1, 0], [2, 0]],    // J
-  2: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // I
-  3: [[-1, 0], [0, 0], [1, 0], [2, 0]],  // O
-  4: [[-1, 0], [0, 0], [1, 0], [2, 0]],   // S
-  5: [[-1, 0], [0, 0], [1, 0], [2, 0]],     // T
-  6: [[-1, 0], [0, 0], [1, 0], [2, 0]],   // Z
-  7: [[-1, 0], [0, 0], [1, 0], [2, 0]], // Rectangulo 3x2 (6)
-  8: [[-1, 0], [0, 0], [1, 0], [2, 0]]    // Serpiente larga (6)
-};
 
 // Color de las piezas: blanco (heredado)
 let PIECE_COLOR = 0xFFFFFF;
@@ -78,8 +54,12 @@ const AUDIO_KEYS = {
   splashMusic: 'Fondo1',
   gameMusicCrowd: 'Fondo2_Gente',
   gameMusicTrack: 'Fondo2_Musica',
+  gameMusicLevel2: 'Fondo_Nivel2',
+  gameMusicLevel3: 'Fondo_Nivel3',
   lose: 'Lose',
-  pop: 'Pop'
+  pop: 'Pop',
+  ticktock: 'Ticktock',
+  noRotation: 'NoRotation'
 };
 
 const AUDIO_VOLUMES = {
@@ -89,13 +69,16 @@ const AUDIO_VOLUMES = {
   splashMusic: 0.2,
   gameMusicCrowd: 0.1,
   gameMusicTrack: 0.2,
+  gameMusicLevel2: 2.2,
+  gameMusicLevel3: 0.2,
   lose: 0.7,
-  pop: 0.5
+  pop: 0.5,
+  ticktock: 0.6,
+  noRotation: 0.5
 };
 
 let audioBank = null;
 let activeMusicKeys = [];
-let musicVisibilityHandlerInstalled = false;
 
 function ensureAudioBank() {
   if (audioBank || !game || !game.add) return audioBank;
@@ -107,8 +90,12 @@ function ensureAudioBank() {
     splashMusic: game.add.audio(AUDIO_KEYS.splashMusic, AUDIO_VOLUMES.splashMusic),
     gameMusicCrowd: game.add.audio(AUDIO_KEYS.gameMusicCrowd, AUDIO_VOLUMES.gameMusicCrowd),
     gameMusicTrack: game.add.audio(AUDIO_KEYS.gameMusicTrack, AUDIO_VOLUMES.gameMusicTrack),
+    gameMusicLevel2: game.add.audio(AUDIO_KEYS.gameMusicLevel2, AUDIO_VOLUMES.gameMusicLevel2),
+    gameMusicLevel3: game.add.audio(AUDIO_KEYS.gameMusicLevel3, AUDIO_VOLUMES.gameMusicLevel3),
     lose: game.add.audio(AUDIO_KEYS.lose, AUDIO_VOLUMES.lose),
-    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop)
+    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop),
+    ticktock: game.add.audio(AUDIO_KEYS.ticktock, AUDIO_VOLUMES.ticktock),
+    noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation)
   };
 
   return audioBank;
@@ -186,17 +173,11 @@ function startSplashMusic() {
 }
 
 function startGameMusic(levelConfig) {
-  if (!levelConfig || !Array.isArray(levelConfig.music) || !levelConfig.music.length) return;
-  if (!musicVisibilityHandlerInstalled) {
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) {
-        stopMusic();
-      }
-    });
-    window.addEventListener('blur', stopMusic);
-    musicVisibilityHandlerInstalled = true;
+  if (levelConfig && levelConfig.music) {
+    playLoopingMusic(levelConfig.music);
+  } else {
+    playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
   }
-  playLoopingMusic(levelConfig.music);
 }
 
 function playLoseSound() {
@@ -288,8 +269,7 @@ class Tetromino {
     if (gameOverState) return false;
     for (let i = 0; i < this.cells.length; i++) {
       let nc = coordFn(i, dir);
-      if (!this.tetris.validateCoordinates(nc[0], nc[1])) 
-      {
+      if (!this.tetris.validateCoordinates(nc[0], nc[1])) {
         return false;
       }
     }
@@ -366,7 +346,7 @@ class Tetromino {
 
 var gameState = {
   preload: function () {
-    var levelKey = window.selectedLevelKey;
+    var levelKey = window.selectedLevelKey || 'level1';
     this.load.text(levelKey, 'assets/levels/' + levelKey + '.json');
   },
   create: resetGame,
@@ -398,10 +378,9 @@ let previewBlocks = [];
 let pauseLabel = null;
 let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
-let MATCH_DURATION_MS = 0;
+let MATCH_DURATION_MS = 100000;
 let matchTimeLeftMs = MATCH_DURATION_MS;
 let currentLevelConfig = null;
-
 let SPEED_INITIAL_MS = INITIAL_FALL_DELAY;
 let SPEED_MID_MS = Math.round(INITIAL_FALL_DELAY / 2);
 let SPEED_MAX_MS = Math.round(INITIAL_FALL_DELAY / 4);
@@ -414,6 +393,7 @@ const ROTATE_COOLDOWN_MS = 100;
 let lastRotateAt = 0;
 
 let hudPlayer = null;
+let hudObjective = null;
 let hudLines = null;
 let hudScore = null;
 
@@ -447,22 +427,14 @@ function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
 }
 
-function getSelectedLevelKey() {
-  return window.selectedLevelKey || 'level1';
-}
-
-function getSelectedLevelConfig() {
-  if (!game || !game.cache) return null;
-  return JSON.parse(game.cache.getText(getSelectedLevelKey()));
-}
-
 function setupHUD() {
   hudPlayer = document.getElementById('hud-player');
+  hudObjective = document.getElementById('hud-objective');
   hudLines = document.getElementById('hud-lines');
   hudScore = document.getElementById('hud-score');
   hudTime = document.getElementById('hud-time');
 
-  if (!hudPlayer || !hudLines || !hudScore || !hudTime) return;
+  if (!hudPlayer || !hudObjective || !hudLines || !hudScore || !hudTime) return;
 
   hudPlayer.onclick = function () {
     let proposedName = window.prompt('Introduce tu nombre', getPlayerName());
@@ -492,8 +464,17 @@ function SetHudVisible(visible) {
 
 function updateHUD() {
   if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
+  if (hudObjective) hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
   if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
   if (hudScore) hudScore.textContent = 'SCORE: ' + score;
+}
+
+function getCurrentObjective() {
+  if (currentLevelConfig && currentLevelConfig.objetivo) {
+    return currentLevelConfig.objetivo;
+  }
+
+  return '-';
 }
 
 function addScoreForClearedLines(nLines) {
@@ -585,42 +566,59 @@ function handleMultiLineBonus(nLines) {
   }
   return bonus;
 }
+
+function addTimeForClearedLines(nLines) {
+  if (nLines <= 0) return 0;
+
+  let bonusMs = nLines * 5000;
+  matchTimeLeftMs += bonusMs;
+  updateMatchTimerText();
+  return bonusMs;
+}
+
 let bajado1 = false;
 let bajado2 = false;
 function updateMatchTimerText() {
   if (!hudTime) return;
 
   let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
-  // When remaining time reaches half -> set to mid speed
-  if (matchTimeLeftMs <= MATCH_DURATION_MS / 2 && !bajado1) {
+  if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
     FALL_DELAY = SPEED_MID_MS;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado1 = true;
-  }
-
-  // When remaining time reaches quarter -> set to max speed
-  if (matchTimeLeftMs <= MATCH_DURATION_MS / 4 && !bajado2) {
+  } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
     FALL_DELAY = SPEED_MAX_MS;
     timer.remove(loop);
     loop = timer.loop(FALL_DELAY, fall, this);
     bajado2 = true;
   }
+  if (secondsLeft <= 10 && secondsLeft > 0 && !ticktockPlaying) {
+    let tt = getAudio('ticktock');
+    if (tt) {
+      tt.volume = AUDIO_VOLUMES.ticktock;
+      tt.loopFull(AUDIO_VOLUMES.ticktock);
+    }
+    ticktockPlaying = true;
+  }
+  if (secondsLeft === 0 && ticktockPlaying) {
+    let tt = getAudio('ticktock');
+    if (tt && tt.isPlaying) tt.stop();
+    ticktockPlaying = false;
+  }
   hudTime.textContent = 'TIME: ' + secondsLeft;
 }
 
-// Reinicia estado, tablero, HUD, input y temporizador para empezar una partida limpia.
 function resetGame() {
-  // clear all blocks
   game.world.removeAll();
 
-  // initialisation
-  currentLevelConfig = getSelectedLevelConfig();
+  var levelKey = window.selectedLevelKey;
+  currentLevelConfig = JSON.parse(game.cache.getText(levelKey));
+
   startGameMusic(currentLevelConfig);
   document.body.style.background = "url('" + currentLevelConfig.backgroundImage + "') no-repeat center center / cover fixed";
   MATCH_DURATION_MS = currentLevelConfig.time * 1000;
 
-  //Configuración velocidad
   SPEED_INITIAL_MS = Number(currentLevelConfig.speedInitial);
   SPEED_MAX_MS = Number(currentLevelConfig.speedMax);
   SPEED_MID_MS = Math.round((SPEED_INITIAL_MS + SPEED_MAX_MS) / 2);
@@ -628,6 +626,18 @@ function resetGame() {
   console.log('Velocidad inicial: ' + SPEED_INITIAL_MS + 'ms');
   console.log('Velocidad media: ' + SPEED_MID_MS + 'ms');
   console.log('Velocidad máxima: ' + SPEED_MAX_MS + 'ms');
+
+  if (currentLevelConfig.tetrominoOffsets) {
+    TETROMINO_OFFSETS = currentLevelConfig.tetrominoOffsets;
+    N_BLOCK_TYPES = Object.keys(TETROMINO_OFFSETS).length;
+    console.log("length: " + N_BLOCK_TYPES);
+  }
+
+  if (hudObjective) {
+    hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
+  }
+
+  // initialisation
   gameOverState = false;
   currentMovementTimer = 0;
   matchTimeLeftMs = MATCH_DURATION_MS;
@@ -642,6 +652,9 @@ function resetGame() {
   comboTween = null;
   bajado1 = false;
   bajado2 = false;
+  ticktockPlaying = false;
+  let ttReset = getAudio('ticktock');
+  if (ttReset && ttReset.isPlaying) ttReset.stop();
   window.scoreSaved = false;
 
   // Create Trellis and initialisation of its grid
@@ -696,7 +709,6 @@ function resetGame() {
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
-  // Start with configured initial fall delay
   FALL_DELAY = SPEED_INITIAL_MS;
   loop = timer.loop(FALL_DELAY, fall, this);
 
@@ -821,7 +833,6 @@ function setGameOver(on) {
     timer.removeAll();
     SetHudVisible(false);
 
-    stopMusic();
     playLoseSound();
 
     clearBoardTween();
@@ -836,6 +847,19 @@ function setGameOver(on) {
 
   }
 };
+
+// Verifica si estamos en nivel 1 y hemos alcanzado 5000 puntos o más
+function checkLevelObjective() {
+  // Obtener el nivel actual
+  let levelKey = window.selectedLevelKey;
+  
+  // Verificar si estamos en nivel 1
+  if (levelKey == 'level1' && linesCompleted >= 2) {
+    setGameOver(true);
+  } else if( levelKey == 'level2' && score >= 1000 ) {
+    setGameOver(true);
+  } else return;
+}
 
 function togglePause() {
   if (gameOverState) return;
@@ -862,6 +886,8 @@ function togglePause() {
 function shakeBlocks() {
   if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
   lastWallShakeAt = game.time.now;
+
+  playUiSound('noRotation');
 
   for (let i = 0; i < tetromino.blocks.length; i++) {
     let bloque = tetromino.blocks[i];
@@ -934,6 +960,9 @@ function updateGame() {
     return;
   }
   updateMatchTimerText();
+
+  // Verificar si hemos alcanzado el objetivo del nivel
+  checkLevelObjective();
 
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
@@ -1026,7 +1055,10 @@ function checkLines(candidateLines) {
         if (comboExtra > 0) score += comboExtra;
         totalPoints = multipliedTotal;
       }
-      showFloatingBonusText('+' + totalPoints, '#f3d40c');
+      if (window.selectedLevelKey == 'level3') {
+        addTimeForClearedLines(collapsed.length);
+      }
+      showFloatingBonusText('+' + totalPoints, '#ffdd00');
       updateHUD();
       playEatingSound();
 
