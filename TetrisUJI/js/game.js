@@ -12,6 +12,8 @@ const WIND_RETRY_MS = 300;          // ms
 const WIND_ARM_IN_MS = 520;         // ms
 const WIND_ARM_OUT_MS = 520;        // ms
 const WIND_PUSH_DURATION_MS = 520;  // ms
+const WIND_ROW_PADDING = 2;         // rows excluded at top/bottom
+const WIND_INPUT_LOCK_MS = 140;     // ms
 
 
 // Pieces (tetrominoes + extras), rotated around a central cell
@@ -418,6 +420,7 @@ let windArm = null;
 let windNextAt = 0;
 let windInProgress = false;
 let windUsedForTetromino = false;
+let windInputLockUntil = 0;
 
 let comboCount = 0;
 let comboExpiresAt = 0;
@@ -822,6 +825,34 @@ function getTetrominoBounds() {
   return { minX: minX, maxX: maxX, minY: minY, maxY: maxY };
 }
 
+function getWindRowRange(bounds) {
+  let minRow = Math.max(WIND_ROW_PADDING, bounds.minY);
+  let maxRow = Math.min(NUMBLOCKS_Y - 1 - WIND_ROW_PADDING, bounds.maxY);
+
+  if (minRow > maxRow) {
+    minRow = Math.min(Math.max(bounds.minY, WIND_ROW_PADDING), NUMBLOCKS_Y - 1 - WIND_ROW_PADDING);
+    maxRow = minRow;
+  }
+
+  return { minRow: minRow, maxRow: maxRow };
+}
+
+function getWindTargetCell() {
+  if (!tetromino || !tetromino.cells) return null;
+
+  let candidates = [];
+  for (let i = 0; i < tetromino.cells.length; i++) {
+    let cell = tetromino.cells[i];
+    let y = cell[1];
+    if (y >= WIND_ROW_PADDING && y <= (NUMBLOCKS_Y - 1 - WIND_ROW_PADDING)) {
+      candidates.push(cell);
+    }
+  }
+
+  if (!candidates.length) return null;
+  return candidates[game.rnd.integerInRange(0, candidates.length - 1)];
+}
+
 function tetrominoAtWindRow(row) {
   if (!tetromino || !tetromino.cells) return false;
 
@@ -845,22 +876,32 @@ function triggerWind() {
 
   windInProgress = true;
   windUsedForTetromino = true;
+  windInputLockUntil = game.time.now + WIND_INPUT_LOCK_MS;
 
   let dir = 'right';
-  let bounds = getTetrominoBounds();
-  let row = bounds.maxY;
+  let targetCell = getWindTargetCell();
+  if (!targetCell) {
+    windInProgress = false;
+    return;
+  }
+
+  if (!tetromino.canMove(tetromino.slide.bind(tetromino), dir)) {
+    windInProgress = false;
+    windUsedForTetromino = true;
+    return;
+  }
 
   windArm.visible = true;
   windArm.anchor.set(0.5, 0.5);
   windArm.scale.set(1, 1);
 
-  let edgeX = bounds.minX * BLOCKSIZE;
+  let edgeX = targetCell[0] * BLOCKSIZE;
 
   let targetX = edgeX - (windArm.width / 2);
   let offscreenX = -windArm.width / 2;
 
   windArm.x = offscreenX;
-  windArm.y = ((row + 1) * BLOCKSIZE) + (windArm.height / 2);
+  windArm.y = (targetCell[1] * BLOCKSIZE) + (BLOCKSIZE / 2);
 
   playWindSound();
 
@@ -868,9 +909,7 @@ function triggerWind() {
     .to({ x: targetX }, WIND_ARM_IN_MS, Phaser.Easing.Linear.None);
 
   inTween.onComplete.add(function () {
-    if (tetrominoAtWindRow(row)) {
-      applyWindPush(dir);
-    }
+    applyWindPush(dir);
 
     let outTween = game.add.tween(windArm)
       .to({ x: offscreenX }, WIND_ARM_OUT_MS, Phaser.Easing.Linear.None);
@@ -1147,6 +1186,11 @@ function updateGame() {
 
   currentMovementTimer += this.time.elapsed;
   if (currentMovementTimer <= MOVEMENT_LAG) return;
+
+  if (game.time.now < windInputLockUntil) {
+    currentMovementTimer = 0;
+    return;
+  }
 
 
   if (cursors.left.isDown) {
