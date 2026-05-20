@@ -36,6 +36,71 @@ const TETROMINO_COLORS = {
   7: 0x19C37D,  // Rectangulo 3x2 (6) - Verde agua
   8: 0xFF5E5B   // Serpiente larga (6) - Coral
 };
+// ultimo cambio
+function spawnBottomBlocks() {
+  // no ejecutar mientras se están limpiando lineas
+  if (gameOverState || pausedState || !theTetris || isCleaningLines) return;
+  
+  let maxCols = NUMBLOCKS_X;
+  let targetCount = Math.min(3, maxCols);
+  let picks = [];
+  while (picks.length < targetCount) {
+    let v = game.rnd.integerInRange(0, maxCols - 1);
+    let found = false;
+    for (let j = 0; j < picks.length; j++) {
+      if (picks[j] == v) {
+        found = true; 
+        break; 
+      }
+    }
+    if (!found) picks.push(v);
+  }
+
+  let createdBlocks = [];
+
+  for (let i = 0; i < picks.length; i++) {
+    let x = picks[i];
+
+    if (theTetris.scene[x][0] == OCCUPIED) {
+      setGameOver(true);
+      return;
+    }
+
+    // Mover hacia arriba: si hay bloque en la celda de abajo y tiene soporte, se sube.
+    for (let y = 0; y < NUMBLOCKS_Y - 1; y++) {
+      let nextCell = y + 1;
+
+      if (theTetris.scene[x][nextCell] == OCCUPIED) {
+        if (nextCell == NUMBLOCKS_Y - 1 || theTetris.scene[x][nextCell + 1] == OCCUPIED) {
+          theTetris.scene[x][y] = OCCUPIED;
+          theTetris.sceneBlocks[x][y] = theTetris.sceneBlocks[x][nextCell];
+          if (theTetris.sceneBlocks[x][y]) {
+            theTetris.sceneBlocks[x][y].y = y * BLOCKSIZE;
+          }
+
+          theTetris.scene[x][nextCell] = EMPTY;
+          theTetris.sceneBlocks[x][nextCell] = null;
+        }
+      }
+    }
+
+    // Crear nuevo bloque en la fila inferior
+    let shape = game.rnd.integerInRange(0, N_BLOCK_TYPES - 1);
+    let color = getTetrominoColor(shape);
+    let g = createBlockGraphic(color, BLOCKSIZE);
+    g.x = x * BLOCKSIZE;
+    g.y = (NUMBLOCKS_Y - 1) * BLOCKSIZE;
+    theTetris.scene[x][NUMBLOCKS_Y - 1] = OCCUPIED;
+    theTetris.sceneBlocks[x][NUMBLOCKS_Y - 1] = g;
+    createdBlocks.push(g);
+  }
+
+  // Animar los bloques recién creados y comprobar líneas
+  landingTween(createdBlocks);
+  let allRows = [];
+  for (let y = 0; y < NUMBLOCKS_Y; y++) allRows.push(y);
+  checkLines(allRows);
+}
 
 function getTetrominoColor(shape) {
   return TETROMINO_COLORS[shape] || PIECE_COLOR;
@@ -408,6 +473,8 @@ let SPEED_MID_MS = Math.round(INITIAL_FALL_DELAY / 2);
 let SPEED_MAX_MS = Math.round(INITIAL_FALL_DELAY / 4);
 
 let timer, loop;
+let bottomPushLoop = null; 
+let isCleaningLines = false; 
 let currentMovementTimer = 0;
 const WALL_SHAKE_COOLDOWN_MS = 120;
 let lastWallShakeAt = 0;
@@ -854,6 +921,8 @@ function resetGame() {
   timer.resume();
   FALL_DELAY = SPEED_INITIAL_MS;
   loop = timer.loop(FALL_DELAY, fall, this);
+  // spawn blocks from bottom every 5 seconds
+  bottomPushLoop = timer.loop(5000, spawnBottomBlocks, this); //ultimo cambio
 
   spawn();
 };
@@ -1003,13 +1072,7 @@ function fall() {
     tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), 'down');
   }
   else {
-    // Tween de encaje justo al tocar fondo
-    for (let i = 0; i < tetromino.blocks.length; i++) {
-      game.add.tween(tetromino.blocks[i].scale)
-        .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
-        .to({ x: 1.05, y: 1.05 }, 20, Phaser.Easing.Linear.None)
-        .start();
-    }
+    landingTween(tetromino.blocks);
 
     playPopSound();
 
@@ -1047,6 +1110,19 @@ function fadeInTetromino() {
 
     game.add.tween(bloque)
       .to({ alpha: 1 }, 200, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
+
+// Tween reutilizable para el efecto de "encaje"/impacto de bloques
+function landingTween(blocks) {
+  if (!blocks || !blocks.length) return;
+  for (let i = 0; i < blocks.length; i++) {
+    let b = blocks[i];
+    if (!b || !b.scale) continue;
+    game.add.tween(b.scale)
+      .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
+      .to({ x: 1.05, y: 1.05 }, 20, Phaser.Easing.Linear.None)
       .start();
   }
 }
@@ -1134,13 +1210,10 @@ function setGameOver(on) {
   }
 };
 
-// Verifica si estamos en nivel 1 y hemos alcanzado 5000 puntos o más
 function checkLevelObjective() {
-  // Obtener el nivel actual
   let levelKey = window.selectedLevelKey;
   
-  // Verificar si estamos en nivel 1
-  if (levelKey == 'level1' && linesCompleted >= 2) {
+  if (levelKey == 'level1' && linesCompleted >= 100) {
     setGameOver(true);
   } else if( levelKey == 'level2' && score >= 1000 ) {
     setGameOver(true);
@@ -1164,11 +1237,6 @@ function togglePause() {
   }
 };
 
-// Intenta rotar la pieza; si choca con una pared, prueba pequeños desplazamientos laterales
-// para "empujarla" hasta una posición válida antes de cancelar la rotación.
-
-//tween colision
-// Efecto shake cuando colisiona con la pared !!!ARREGLARLO PARA LLAMAR A LA FUNCIÓN correctamente con el wallkick)
 function shakeBlocks() {
   if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
   lastWallShakeAt = game.time.now;
@@ -1324,14 +1392,22 @@ function checkLines(candidateLines) {
   for (let i = 0; i < candidateLines.length; i++) {
     let y = candidateLines[i];
 
-    if (lineSum(y) == (NUMBLOCKS_X * OCCUPIED)) {
-      collapsed.push(y);
+    let lineIsFull = true;
+    for (let x = 0; x < NUMBLOCKS_X; x++) {
+      if (theTetris.scene[x][y] !== OCCUPIED) {
+        lineIsFull = false;
+        break;
+      }
+    }
 
+    if (lineIsFull) {
+      collapsed.push(y);
       blinkLine(y);
     }
   }
 
   if (collapsed.length) {
+    isCleaningLines = true; // activar bandera
 
     game.time.events.add(300, function () {
       for (let i = 0; i < collapsed.length; i++) {
@@ -1356,6 +1432,7 @@ function checkLines(candidateLines) {
       showFloatingBonusText('+' + totalPoints, '#ffdd00');
       updateHUD();
       playEatingSound();
+      isCleaningLines = false; // desactivar bandera tras limpiar
 
     }, this);
   }
