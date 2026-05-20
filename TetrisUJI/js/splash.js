@@ -1,6 +1,6 @@
 var splashState = {
   preload: function () {
-    game.load.image('windArm', 'assets/BG/brazo.png');
+    game.load.image('wind', 'assets/BG/wind.png');
     game.load.audio('Button1', 'assets/sound/Button1.mp3');
     game.load.audio('Button2', 'assets/sound/Button2.mp3');
     game.load.audio('Eating', 'assets/sound/Eating.mp3');
@@ -14,6 +14,7 @@ var splashState = {
     game.load.audio('Ticktock', 'assets/sound/ticktock.mp3');
     game.load.audio('NoRotation', 'assets/sound/no_rotation.mp3');
     game.load.audio('Linea', 'assets/sound/linea.mp3');
+    game.load.audio('wind', 'assets/sound/wind.mp3');
   },
 
   create: function () {
