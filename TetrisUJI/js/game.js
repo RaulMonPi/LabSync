@@ -34,74 +34,6 @@ const TETROMINO_COLORS = {
   8: 0xFF5E5B,   // Serpiente larga (6) - Coral
   9: 0x9b9b9b   // Gris
 };
-// ultimo cambio
-function spawnBottomBlocks() {
-  // no ejecutar mientras se están limpiando lineas
-  if (gameOverState || pausedState || !theTetris || isCleaningLines) return;
-  
-  let maxCols = NUMBLOCKS_X;
-  let targetCount = Math.min(3, maxCols);
-  let picks = [];
-  while (picks.length < targetCount) {
-    let v = game.rnd.integerInRange(0, maxCols - 1);
-    let found = false;
-    for (let j = 0; j < picks.length; j++) {
-      if (picks[j] == v) {
-        found = true; 
-        break; 
-      }
-    }
-    if (!found) picks.push(v);
-  }
-
-  let createdBlocks = [];
-
-  for (let i = 0; i < picks.length; i++) {
-    let x = picks[i];
-
-    if (theTetris.scene[x][0] == OCCUPIED) {
-      setGameOver(true);
-      return;
-    }
-
-    // Mover hacia arriba: si hay bloque en la celda de abajo y tiene soporte, se sube.
-    for (let y = 0; y < NUMBLOCKS_Y - 1; y++) {
-      let nextCell = y + 1;
-
-      if (theTetris.scene[x][nextCell] == OCCUPIED) {
-        if (nextCell == NUMBLOCKS_Y - 1 || theTetris.scene[x][nextCell + 1] == OCCUPIED) {
-          theTetris.scene[x][y] = OCCUPIED;
-          theTetris.sceneBlocks[x][y] = theTetris.sceneBlocks[x][nextCell];
-          if (theTetris.sceneBlocks[x][y]) {
-            theTetris.sceneBlocks[x][y].y = y * BLOCKSIZE;
-          }
-
-          theTetris.scene[x][nextCell] = EMPTY;
-          theTetris.sceneBlocks[x][nextCell] = null;
-        }
-      }
-    }
-
-    // Crear nuevo bloque en la fila inferior
-    let color = getTetrominoColor(9);
-    let g = createBlockGraphic(color, BLOCKSIZE);
-    g.x = x * BLOCKSIZE;
-    g.y = (NUMBLOCKS_Y - 1) * BLOCKSIZE;
-    theTetris.scene[x][NUMBLOCKS_Y - 1] = OCCUPIED;
-    theTetris.sceneBlocks[x][NUMBLOCKS_Y - 1] = g;
-    createdBlocks.push(g);
-  }
-
-  // Animar los bloques recién creados y comprobar líneas
-  landingTween(createdBlocks);
-  let allRows = [];
-  for (let y = 0; y < NUMBLOCKS_Y; y++) allRows.push(y);
-  checkLines(allRows);
-}
-
-function getTetrominoColor(shape) {
-  return TETROMINO_COLORS[shape] || PIECE_COLOR;
-}
 
 // Scene grid values
 const EMPTY = 0;
@@ -256,21 +188,13 @@ function startGameMusic(levelConfig) {
   }
 }
 
-function playLoseSound() {
-  stopMusic();
-  playUiSound('lose');
-}
-
-function playPopSound() {
-  playUiSound('pop');
-}
-
-function playEatingSound() {
-  playUiSound('eating');
-}
-
-function playWindSound() {
-  playUiSound('wind');
+// función para reproducir sonidos puntuales
+function playSound(name) {
+  if (!name) return;
+  if (name == 'lose') {
+    stopMusic();
+  }
+  playUiSound(name);
 }
 
 class Tetris {
@@ -1004,7 +928,7 @@ function triggerWind(dir) {
   windArm.y = centerY;
   windArm.visible = true;
 
-  playWindSound();
+  playSound('wind');
   applyWindPush(dir);
 
   let outTween = game.add.tween(windArm)
@@ -1028,7 +952,7 @@ function fall() {
   else {
     landingTween(tetromino.blocks);
 
-    playPopSound();
+    playSound('pop');
 
     lockTetromino();
   }
@@ -1147,7 +1071,7 @@ function setGameOver(on) {
     SetHudVisible(false);
     clearGhostPiece();
 
-    playLoseSound();
+    playSound('lose');
 
     clearBoardTween();
 
@@ -1260,6 +1184,9 @@ function rotateWithWallKick(dir) {
   return false;
 };
 
+function getTetrominoColor(shape) {
+  return TETROMINO_COLORS[shape] || PIECE_COLOR;
+}
 
 // Bucle de actualización para leer input y mover la pieza
 function updateGame() {
@@ -1406,7 +1333,7 @@ function checkLines(candidateLines) {
       }
       showFloatingBonusText('+' + totalPoints, '#ffdd00');
       updateHUD();
-      playEatingSound();
+      playSound('eating');
       isCleaningLines = false; // desactivar bandera tras limpiar
 
     }, this);
@@ -1456,3 +1383,67 @@ function collapse(linesToCollapse) {
     }
   }
 };
+
+function spawnBottomBlocks() {
+  // no ejecutar mientras se están limpiando lineas
+  if (gameOverState || pausedState || !theTetris || isCleaningLines) return;
+  
+  let maxCols = NUMBLOCKS_X;
+  let targetCount = Math.min(3, maxCols);
+  let picks = [];
+  while (picks.length < targetCount) {
+    let v = game.rnd.integerInRange(0, maxCols - 1);
+    let found = false;
+    for (let j = 0; j < picks.length; j++) {
+      if (picks[j] == v) {
+        found = true; 
+        break; 
+      }
+    }
+    if (!found) picks.push(v);
+  }
+
+  let createdBlocks = [];
+
+  for (let i = 0; i < picks.length; i++) {
+    let x = picks[i];
+
+    if (theTetris.scene[x][0] == OCCUPIED) {
+      setGameOver(true);
+      return;
+    }
+
+    // Mover hacia arriba: si hay bloque en la celda de abajo y tiene soporte, se sube.
+    for (let y = 0; y < NUMBLOCKS_Y - 1; y++) {
+      let nextCell = y + 1;
+
+      if (theTetris.scene[x][nextCell] == OCCUPIED) {
+        if (nextCell == NUMBLOCKS_Y - 1 || theTetris.scene[x][nextCell + 1] == OCCUPIED) {
+          theTetris.scene[x][y] = OCCUPIED;
+          theTetris.sceneBlocks[x][y] = theTetris.sceneBlocks[x][nextCell];
+          if (theTetris.sceneBlocks[x][y]) {
+            theTetris.sceneBlocks[x][y].y = y * BLOCKSIZE;
+          }
+
+          theTetris.scene[x][nextCell] = EMPTY;
+          theTetris.sceneBlocks[x][nextCell] = null;
+        }
+      }
+    }
+
+    // Crear nuevo bloque en la fila inferior
+    let color = getTetrominoColor(9);
+    let g = createBlockGraphic(color, BLOCKSIZE);
+    g.x = x * BLOCKSIZE;
+    g.y = (NUMBLOCKS_Y - 1) * BLOCKSIZE;
+    theTetris.scene[x][NUMBLOCKS_Y - 1] = OCCUPIED;
+    theTetris.sceneBlocks[x][NUMBLOCKS_Y - 1] = g;
+    createdBlocks.push(g);
+  }
+
+  // Animar los bloques recién creados y comprobar líneas
+  landingTween(createdBlocks);
+  let allRows = [];
+  for (let y = 0; y < NUMBLOCKS_Y; y++) allRows.push(y);
+  checkLines(allRows);
+}
