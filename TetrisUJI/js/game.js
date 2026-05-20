@@ -31,7 +31,7 @@ const TETROMINO_COLORS = {
   5: 0xCC00FF,  // T - Purple
   6: 0xFF0000,  // Z - Rojo
   7: 0x19C37D,  // Rectangulo 3x2 (6) - Verde agua
-  8: 0xFF5E5B,   // Serpiente larga (6) - Coral
+  8: 0xFF5E5B,  // Serpiente larga (6) - Coral
   9: 0x9b9b9b   // Gris
 };
 
@@ -39,163 +39,6 @@ const TETROMINO_COLORS = {
 const EMPTY = 0;
 const FALLING = 1;
 const OCCUPIED = 2;
-
-function createBlockGraphic(color, size, alpha) {
-  let g = game.add.graphics(0, 0);
-  g.beginFill(color, alpha === undefined ? 1 : alpha);
-  let m = 1;
-  g.drawRect(m, m, size - 2 * m, size - 2 * m);
-  g.endFill();
-  return g;
-}
-
-const AUDIO_KEYS = {
-  button1: 'Button1',
-  button2: 'Button2',
-  eating: 'Eating',
-  splashMusic: 'Fondo1',
-  gameMusicCrowd: 'Fondo2_Gente',
-  gameMusicTrack: 'Fondo2_Musica',
-  gameMusicLevel2: 'Fondo_Nivel2',
-  gameMusicLevel3: 'Fondo_Nivel3',
-  lose: 'Lose',
-  pop: 'Pop',
-  ticktock: 'Ticktock',
-  noRotation: 'NoRotation',
-  linea: 'Linea',
-  wind: 'wind'
-};
-
-const AUDIO_VOLUMES = {
-  button1: 0.7,
-  button2: 0.65,
-  eating: 1,
-  splashMusic: 0.2,
-  gameMusicCrowd: 0.1,
-  gameMusicTrack: 0.2,
-  gameMusicLevel2: 0.2,
-  gameMusicLevel3: 0.2,
-  lose: 0.7,
-  pop: 0.5,
-  ticktock: 0.6,
-  noRotation: 0.5,
-  linea: 0.4,
-  wind: 0.1
-};
-
-let audioBank = null;
-let activeMusicKeys = [];
-
-function ensureAudioBank() {
-  if (audioBank || !game || !game.add) return audioBank;
-
-  audioBank = {
-    button1: game.add.audio(AUDIO_KEYS.button1, AUDIO_VOLUMES.button1),
-    button2: game.add.audio(AUDIO_KEYS.button2, AUDIO_VOLUMES.button2),
-    eating: game.add.audio(AUDIO_KEYS.eating, AUDIO_VOLUMES.eating),
-    splashMusic: game.add.audio(AUDIO_KEYS.splashMusic, AUDIO_VOLUMES.splashMusic),
-    gameMusicCrowd: game.add.audio(AUDIO_KEYS.gameMusicCrowd, AUDIO_VOLUMES.gameMusicCrowd),
-    gameMusicTrack: game.add.audio(AUDIO_KEYS.gameMusicTrack, AUDIO_VOLUMES.gameMusicTrack),
-    gameMusicLevel2: game.add.audio(AUDIO_KEYS.gameMusicLevel2, AUDIO_VOLUMES.gameMusicLevel2),
-    gameMusicLevel3: game.add.audio(AUDIO_KEYS.gameMusicLevel3, AUDIO_VOLUMES.gameMusicLevel3),
-    lose: game.add.audio(AUDIO_KEYS.lose, AUDIO_VOLUMES.lose),
-    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop),
-    ticktock: game.add.audio(AUDIO_KEYS.ticktock, AUDIO_VOLUMES.ticktock),
-    noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation),
-    linea: game.add.audio(AUDIO_KEYS.linea, AUDIO_VOLUMES.linea),
-    wind: game.add.audio(AUDIO_KEYS.wind, AUDIO_VOLUMES.wind)
-  };
-
-  return audioBank;
-}
-
-function getAudio(soundKey) {
-  let bank = ensureAudioBank();
-  return bank ? bank[soundKey] : null;
-}
-
-function playUiSound(soundKey) {
-  let sound = getAudio(soundKey);
-
-  if (sound) {
-    sound.volume = AUDIO_VOLUMES[soundKey] || 1;
-    sound.play();
-  }
-}
-
-function stopMusic() {
-  if (!activeMusicKeys.length) return;
-
-  for (let i = 0; i < activeMusicKeys.length; i++) {
-    let sound = getAudio(activeMusicKeys[i]);
-    if (sound && sound.isPlaying) {
-      sound.stop();
-    }
-  }
-
-  activeMusicKeys = [];
-}
-
-function pauseMusic() {
-  if (!activeMusicKeys.length) return;
-
-  for (let i = 0; i < activeMusicKeys.length; i++) {
-    let sound = getAudio(activeMusicKeys[i]);
-    if (sound && sound.isPlaying) {
-      sound.pause();
-    }
-  }
-}
-
-function resumeMusic() {
-  if (!activeMusicKeys.length) return;
-
-  for (let i = 0; i < activeMusicKeys.length; i++) {
-    let sound = getAudio(activeMusicKeys[i]);
-    if (sound && sound.paused) {
-      sound.resume();
-    }
-  }
-}
-
-function playLoopingMusic(soundKeys) {
-  ensureAudioBank();
-  if (!audioBank) return;
-
-  stopMusic();
-
-  for (let i = 0; i < soundKeys.length; i++) {
-    let sound = getAudio(soundKeys[i]);
-    if (sound) {
-      let volume = AUDIO_VOLUMES[soundKeys[i]] || 1;
-      sound.volume = volume;
-      sound.loopFull(volume);
-    }
-  }
-
-  activeMusicKeys = soundKeys.slice(0);
-}
-
-function startSplashMusic() {
-  playLoopingMusic(['splashMusic']);
-}
-
-function startGameMusic(levelConfig) {
-  if (levelConfig && levelConfig.music) {
-    playLoopingMusic(levelConfig.music);
-  } else {
-    playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
-  }
-}
-
-// función para reproducir sonidos puntuales
-function playSound(name) {
-  if (!name) return;
-  if (name == 'lose') {
-    stopMusic();
-  }
-  playUiSound(name);
-}
 
 class Tetris {
   constructor() {
@@ -419,42 +262,19 @@ let windArm = null;
 let windNextAt = 0;
 let windInProgress = false;
 
-let comboCount = 0;
-let comboExpiresAt = 0;
-let comboLabel = null;
-let comboTween = null;
-let floatingBonusFlip = false;
-
-const SCORE_BY_LINES = {
-  1: 10,
-  2: 20,
-  3: 30,
-  4: 40
-};
-
-const BONUS_MULTI_LINE = {
-  2: 150,
-  3: 300,
-  4: 500
-};
-
-const COMBO_WINDOW_MS = 10000;
-const COMBO_SHRINK_MS = 14000;
-const COMBO_SCORE_STEP = 50;
+//--------------------------------------------- GENERAL ---------------------------------------------
 
 function getPlayerName() {
   return localStorage.getItem('playerName') || window.playerName || 'Player';
 }
 
-function clearGhostPiece() {
-  clearCompletionBlink();
-  for (let i = 0; i < ghostBlocks.length; i++) {
-    if (ghostBlocks[i] && ghostBlocks[i].parent) {
-      ghostBlocks[i].destroy();
-    }
-  }
-  ghostBlocks = [];
-  ghostCells = [];
+function createBlockGraphic(color, size, alpha) {
+  let g = game.add.graphics(0, 0);
+  g.beginFill(color, alpha === undefined ? 1 : alpha);
+  let m = 1;
+  g.drawRect(m, m, size - 2 * m, size - 2 * m);
+  g.endFill();
+  return g;
 }
 
 function clearCompletionBlink() {
@@ -558,186 +378,15 @@ function updateGhostPiece() {
   updateCompletionBlink();
 }
 
-function setupHUD() {
-  hudPlayer = document.getElementById('hud-player');
-  hudObjective = document.getElementById('hud-objective');
-  hudLines = document.getElementById('hud-lines');
-  hudScore = document.getElementById('hud-score');
-  hudTime = document.getElementById('hud-time');
-
-  if (!hudPlayer || !hudObjective || !hudLines || !hudScore || !hudTime) return;
-
-  hudPlayer.onclick = function () {
-    let proposedName = window.prompt('Introduce tu nombre', getPlayerName());
-    if (proposedName === null) return;
-
-    proposedName = proposedName.trim();
-    if (proposedName === '') proposedName = 'Player';
-
-    localStorage.setItem('playerName', proposedName);
-    window.playerName = proposedName;
-    updateHUD();
-  };
-
-  updateHUD();
-}
-
-function SetHudVisible(visible) {
-  let hudOverlay = document.getElementById('hud-overlay');
-  if (hudOverlay) {
-    if (visible) {
-      hudOverlay.style.display = 'flex';
-    } else {
-      hudOverlay.style.display = 'none';
+function clearGhostPiece() {
+  clearCompletionBlink();
+  for (let i = 0; i < ghostBlocks.length; i++) {
+    if (ghostBlocks[i] && ghostBlocks[i].parent) {
+      ghostBlocks[i].destroy();
     }
   }
-}
-
-function updateHUD() {
-  if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
-  if (hudObjective) hudObjective.textContent = 'OBJECTIVE: ' + getCurrentObjective();
-  if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
-  if (hudScore) hudScore.textContent = 'SCORE: ' + score;
-}
-
-function getCurrentObjective() {
-  if (currentLevelConfig && currentLevelConfig.objective) {
-    return currentLevelConfig.objective;
-  }
-
-  return '-';
-}
-
-function addScoreForClearedLines(nLines) {
-  if (nLines <= 0) return;
-  let gained = SCORE_BY_LINES[nLines] || (800 + (nLines - 4) * 400);
-  linesCompleted += nLines;
-  score += gained;
-  return gained;
-}
-
-function showFloatingBonusText(text, color) {
-  floatingBonusFlip = !floatingBonusFlip;
-  let yOffset = floatingBonusFlip ? -0.06 : 0.06;
-  let baseY = gameHeight * (0.35 + yOffset);
-
-  let t = game.add.text(
-    boardWidth / 2,
-    baseY,
-    text,
-    { font: '24px KyotoTitle', fill: color, align: 'center' }
-  );
-  t.anchor.set(0.5);
-  t.alpha = 0.95;
-  game.world.bringToTop(t);
-
-  let tween = game.add.tween(t)
-    .to({ y: t.y - 48, alpha: 0 }, 2600, Phaser.Easing.Linear.None);
-
-  tween.onComplete.add(function () {
-    t.destroy();
-  });
-
-  tween.start();
-}
-
-function showComboIndicator(multiplierText) {
-  if (!comboLabel) {
-    comboLabel = game.add.text(
-      boardWidth / 2,
-      gameHeight * 0.18,
-      multiplierText,
-      { font: '36px KyotoTitle', fill: '#ffffff', align: 'center' }
-    );
-    comboLabel.anchor.set(0.5);
-  }
-
-  comboLabel.text = multiplierText;
-  comboLabel.alpha = 1;
-  comboLabel.scale.set(1.5);
-  game.world.bringToTop(comboLabel);
-
-  if (comboTween) game.tweens.remove(comboTween);
-  game.tweens.removeFrom(comboLabel.scale);
-  comboTween = game.add.tween(comboLabel)
-    .to({ alpha: 0, x: comboLabel.x, y: comboLabel.y, }, COMBO_WINDOW_MS, Phaser.Easing.Linear.None);
-
-  let scaleTween = game.add.tween(comboLabel.scale)
-    .to({ x: 0.6, y: 0.6 }, COMBO_SHRINK_MS, Phaser.Easing.Linear.None);
-
-  comboTween.onComplete.add(function () {
-    if (comboLabel) comboLabel.alpha = 0;
-  });
-
-  comboTween.start();
-  scaleTween.start();
-}
-
-function handleComboBonus(nLines) {
-  if (nLines <= 0) return 0;
-
-  let now = game.time.now;
-  if (now <= comboExpiresAt) {
-    comboCount += nLines;
-  } else {
-    comboCount = nLines;
-  }
-
-  comboExpiresAt = now + COMBO_WINDOW_MS;
-
-  let multiplierValue = comboCount * 10;
-  showComboIndicator('x' + multiplierValue);
-  return multiplierValue;
-}
-
-function handleMultiLineBonus(nLines) {
-  let bonus = BONUS_MULTI_LINE[nLines] || 0;
-  if (bonus > 0) {
-    score += bonus;
-  }
-  return bonus;
-}
-
-function addTimeForClearedLines(nLines) {
-  if (nLines <= 0) return 0;
-
-  let bonusMs = nLines * 5000;
-  matchTimeLeftMs += bonusMs;
-  updateMatchTimerText();
-  return bonusMs;
-}
-
-let bajado1 = false;
-let bajado2 = false;
-function updateMatchTimerText() {
-  if (!hudTime) return;
-
-  let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
-  if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
-    FALL_DELAY = SPEED_MID_MS;
-    timer.remove(loop);
-    loop = timer.loop(FALL_DELAY, fall, this);
-    bajado1 = true;
-  } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
-    FALL_DELAY = SPEED_MAX_MS;
-    timer.remove(loop);
-    loop = timer.loop(FALL_DELAY, fall, this);
-    bajado2 = true;
-  }
-  if (secondsLeft <= 10 && secondsLeft > 0 && !ticktockPlaying) {
-    let tt = getAudio('ticktock');
-    if (tt) {
-      tt.volume = AUDIO_VOLUMES.ticktock;
-      tt.loopFull(AUDIO_VOLUMES.ticktock);
-    }
-    ticktockPlaying = true;
-  }
-  if (secondsLeft === 0 && ticktockPlaying) {
-    let tt = getAudio('ticktock');
-    if (tt && tt.isPlaying) tt.stop();
-    ticktockPlaying = false;
-  }
-  hudTime.textContent = 'TIME: ' + secondsLeft;
+  ghostBlocks = [];
+  ghostCells = [];
 }
 
 function resetGame() {
@@ -848,102 +497,16 @@ function resetGame() {
 
   updateMatchTimerText();
 
-  // timer
-  // IMPORTANTE: si venimos de un game over, el Timer andará pausado.
-  // Hay que reanudarlo explícitamente, o la caída se queda a 0 (no cae nunca).
   timer = game.time.events;
   timer.removeAll();
   timer.resume();
   FALL_DELAY = SPEED_INITIAL_MS;
   loop = timer.loop(FALL_DELAY, fall, this);
-  // spawn blocks from bottom every 5 seconds
-  bottomPushLoop = timer.loop(5000, spawnBottomBlocks, this); //ultimo cambio
+  bottomPushLoop = timer.loop(5000, spawnBottomBlocks, this);
 
   spawn();
 };
 
-function setupWindEnemy() {
-  if (windArm) {
-    windArm.destroy();
-  }
-
-  windArm = game.add.sprite(game.world.centerX, game.world.centerY, 'wind');
-  windArm.anchor.set(0.5, 0.5);
-  windArm.alpha = 1;
-  windArm.visible = false;
-  windInProgress = false;
-  scheduleNextWind();
-}
-
-function scheduleNextWind(minMs, maxMs) {
-  let min = (minMs !== undefined) ? minMs : WIND_MIN_INTERVAL_MS;
-  let max = (maxMs !== undefined) ? maxMs : WIND_MAX_INTERVAL_MS;
-  windNextAt = game.time.now + game.rnd.integerInRange(min, max);
-}
-
-function applyWindPush(dir) {
-  if (!tetromino) return;
-
-  if (tetromino.canMove(tetromino.slide.bind(tetromino), dir)) {
-    tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), dir);
-  }
-}
-
-function triggerWind(dir) {
-  if (!windArm || windInProgress || gameOverState || pausedState) return;
-  if (!dir) return;
-
-  if (!tetromino || !tetromino.canMove(tetromino.slide.bind(tetromino), dir)) {
-    scheduleNextWind(WIND_RETRY_MS, WIND_RETRY_MS);
-    return;
-  }
-
-  windInProgress = true;
-
-  let centerX = game.world.centerX;
-  let centerY = game.world.centerY;
-  let travel = BLOCKSIZE * 2;
-
-  let targetX = centerX;
-  let targetY = centerY;
-
-  windArm.rotation = 0;
-  windArm.scale.set(1, 1);
-
-  if (dir === 'left') {
-    windArm.scale.x = -1;
-    targetX = centerX - travel;
-  } else if (dir === 'right') {
-    windArm.scale.x = 1;
-    targetX = centerX + travel;
-  } else if (dir === 'down') {
-    windArm.rotation = Math.PI / 2;
-    targetY = centerY + travel;
-  } else if (dir === 'up') {
-    windArm.rotation = -Math.PI / 2;
-    targetY = centerY - travel;
-  }
-
-  windArm.x = centerX;
-  windArm.y = centerY;
-  windArm.visible = true;
-
-  playSound('wind');
-  applyWindPush(dir);
-
-  let outTween = game.add.tween(windArm)
-    .to({ x: targetX, y: targetY }, WIND_ARM_OUT_MS, Phaser.Easing.Linear.None);
-
-  outTween.onComplete.add(function () {
-    windArm.visible = false;
-    windInProgress = false;
-    scheduleNextWind();
-  });
-
-  outTween.start();
-}
-
-// Tick de caída automática: intenta bajar la pieza, o la fija si ya no puede.
 function fall() {
   if (gameOverState) return;
   if (tetromino.canMove(tetromino.slide.bind(tetromino), 'down')) {
@@ -958,7 +521,6 @@ function fall() {
   }
 };
 
-// Crea una nueva pieza en la parte superior; si colisiona al aparecer, termina la partida.
 function spawn() {
   let shape = nextShape;
   let color = getTetrominoColor(shape);
@@ -977,38 +539,10 @@ function spawn() {
 
 };
 
-//twen cuando aparece 
-function fadeInTetromino() {
-  for (let i = 0; i < tetromino.blocks.length; i++) {
-    let bloque = tetromino.blocks[i];
-
-    bloque.alpha = 0; // empieza invisible
-
-    game.add.tween(bloque)
-      .to({ alpha: 1 }, 200, Phaser.Easing.Linear.None)
-      .start();
-  }
-}
-
-// Tween reutilizable para el efecto de "encaje"/impacto de bloques
-function landingTween(blocks) {
-  if (!blocks || !blocks.length) return;
-  for (let i = 0; i < blocks.length; i++) {
-    let b = blocks[i];
-    if (!b || !b.scale) continue;
-    game.add.tween(b.scale)
-      .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
-      .to({ x: 1.05, y: 1.05 }, 20, Phaser.Easing.Linear.None)
-      .start();
-  }
-}
-
 function randomShape() {
   return Math.floor(Math.random() * N_BLOCK_TYPES);
 };
 
-// Redibuja el panel de preview con la forma del siguiente tetromino.
-// Primero elimina la miniatura anterior y luego centra la nueva pieza en el panel lateral.
 function updateNextPreview(shape) {
   for (let i = 0; i < previewBlocks.length; i++) {
     previewBlocks[i].destroy();
@@ -1033,36 +567,6 @@ function updateNextPreview(shape) {
   }
 };
 
-//tween gameover
-function clearBoardTween() {
-  // Bloques ya fijados en el tablero
-  for (let x = 0; x < theTetris.sceneBlocks.length; x++) {
-    for (let y = 0; y < theTetris.sceneBlocks[x].length; y++) {
-      let bloque = theTetris.sceneBlocks[x][y];
-
-      if (bloque) {
-        game.add.tween(bloque)
-          .to({ alpha: 0 }, 200, Phaser.Easing.Linear.None)
-          .delay(x * 60)
-          .start();
-      }
-    }
-  }
-
-  // Tetrominó actual que acaba de aparecer
-  if (tetromino && tetromino.blocks) {
-    for (let i = 0; i < tetromino.blocks.length; i++) {
-      let bloque = tetromino.blocks[i];
-
-      game.add.tween(bloque)
-        .to({ alpha: 0 }, 200, Phaser.Easing.Linear.None)
-        .delay(0)
-        .start();
-    }
-  }
-}
-
-// Activa el estado de fin de partida y cambia al state HallFame.
 function setGameOver(on) {
   gameOverState = on;
   if (gameOverState) {
@@ -1127,29 +631,6 @@ function returnToMenuFromPause() {
 
   game.state.start('Menu');
 }
-
-function shakeBlocks() {
-  if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
-  lastWallShakeAt = game.time.now;
-
-  playUiSound('noRotation');
-
-  for (let i = 0; i < tetromino.blocks.length; i++) {
-    let bloque = tetromino.blocks[i];
-    let originalX = tetromino.cells[i][0] * BLOCKSIZE;
-
-    // Avoid stacking tweens and re-anchor to logical position to prevent visual drift.
-    game.tweens.removeFrom(bloque);
-    bloque.x = originalX;
-
-    game.add.tween(bloque)
-      .to({ x: originalX + 5 }, 50, Phaser.Easing.Linear.None)
-      .to({ x: originalX - 5 }, 50, Phaser.Easing.Linear.None)
-      .to({ x: originalX }, 50, Phaser.Easing.Linear.None)
-      .start();
-  }
-}
-
 
 function rotateWithWallKick(dir) {
   if (game.time.now - lastRotateAt < ROTATE_COOLDOWN_MS) return false;
@@ -1227,7 +708,6 @@ function updateGame() {
   }
   updateMatchTimerText();
 
-  // Verificar si hemos alcanzado el objetivo del nivel
   checkLevelObjective();
 
   currentMovementTimer += this.time.elapsed;
@@ -1254,8 +734,6 @@ function updateGame() {
   currentMovementTimer = 0;
 };
 
-
-// Fija la pieza actual en el tablero, comprueba líneas completas y genera la siguiente.
 function lockTetromino() {
   let touchedLines = [];
   for (let i = 0; i < tetromino.cells.length; i++) {
@@ -1273,21 +751,6 @@ function lockTetromino() {
 
 };
 
-//funcion brillo de lineas completas
-function blinkLine(lineY, times) {
-  for (let x = 0; x < NUMBLOCKS_X; x++) {
-    let bloque = theTetris.sceneBlocks[x][lineY];
-
-    if (bloque) {
-      game.add.tween(bloque)
-        .to({ alpha: 0.2 }, 80, Phaser.Easing.Linear.None)
-        .to({ alpha: 0.6 }, 80, Phaser.Easing.Linear.None)
-        .start();
-    }
-  }
-}
-
-// Revisa las filas tocadas por la pieza recién fijada y aplica limpieza/colapso/puntuación.
 function checkLines(candidateLines) {
   let collapsed = [];
 
@@ -1446,4 +909,534 @@ function spawnBottomBlocks() {
   let allRows = [];
   for (let y = 0; y < NUMBLOCKS_Y; y++) allRows.push(y);
   checkLines(allRows);
+}
+
+//--------------------------------------------- MÚSICA/SONIDOS ---------------------------------------------
+
+const AUDIO_KEYS = {
+  button1: 'Button1',
+  button2: 'Button2',
+  eating: 'Eating',
+  splashMusic: 'Fondo1',
+  gameMusicCrowd: 'Fondo2_Gente',
+  gameMusicTrack: 'Fondo2_Musica',
+  gameMusicLevel2: 'Fondo_Nivel2',
+  gameMusicLevel3: 'Fondo_Nivel3',
+  lose: 'Lose',
+  pop: 'Pop',
+  ticktock: 'Ticktock',
+  noRotation: 'NoRotation',
+  linea: 'Linea',
+  wind: 'wind'
+};
+
+const AUDIO_VOLUMES = {
+  button1: 0.7,
+  button2: 0.65,
+  eating: 1,
+  splashMusic: 0.2,
+  gameMusicCrowd: 0.1,
+  gameMusicTrack: 0.2,
+  gameMusicLevel2: 0.2,
+  gameMusicLevel3: 0.2,
+  lose: 0.7,
+  pop: 0.5,
+  ticktock: 0.6,
+  noRotation: 0.5,
+  linea: 0.4,
+  wind: 0.1
+};
+
+let audioBank = null;
+let activeMusicKeys = [];
+
+function ensureAudioBank() {
+  if (audioBank || !game || !game.add) return audioBank;
+
+  audioBank = {
+    button1: game.add.audio(AUDIO_KEYS.button1, AUDIO_VOLUMES.button1),
+    button2: game.add.audio(AUDIO_KEYS.button2, AUDIO_VOLUMES.button2),
+    eating: game.add.audio(AUDIO_KEYS.eating, AUDIO_VOLUMES.eating),
+    splashMusic: game.add.audio(AUDIO_KEYS.splashMusic, AUDIO_VOLUMES.splashMusic),
+    gameMusicCrowd: game.add.audio(AUDIO_KEYS.gameMusicCrowd, AUDIO_VOLUMES.gameMusicCrowd),
+    gameMusicTrack: game.add.audio(AUDIO_KEYS.gameMusicTrack, AUDIO_VOLUMES.gameMusicTrack),
+    gameMusicLevel2: game.add.audio(AUDIO_KEYS.gameMusicLevel2, AUDIO_VOLUMES.gameMusicLevel2),
+    gameMusicLevel3: game.add.audio(AUDIO_KEYS.gameMusicLevel3, AUDIO_VOLUMES.gameMusicLevel3),
+    lose: game.add.audio(AUDIO_KEYS.lose, AUDIO_VOLUMES.lose),
+    pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop),
+    ticktock: game.add.audio(AUDIO_KEYS.ticktock, AUDIO_VOLUMES.ticktock),
+    noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation),
+    linea: game.add.audio(AUDIO_KEYS.linea, AUDIO_VOLUMES.linea),
+    wind: game.add.audio(AUDIO_KEYS.wind, AUDIO_VOLUMES.wind)
+  };
+
+  return audioBank;
+}
+
+function getAudio(soundKey) {
+  let bank = ensureAudioBank();
+  return bank ? bank[soundKey] : null;
+}
+
+function playUiSound(soundKey) {
+  let sound = getAudio(soundKey);
+
+  if (sound) {
+    sound.volume = AUDIO_VOLUMES[soundKey] || 1;
+    sound.play();
+  }
+}
+
+function stopMusic() {
+  if (!activeMusicKeys.length) return;
+
+  for (let i = 0; i < activeMusicKeys.length; i++) {
+    let sound = getAudio(activeMusicKeys[i]);
+    if (sound && sound.isPlaying) {
+      sound.stop();
+    }
+  }
+
+  activeMusicKeys = [];
+}
+
+function pauseMusic() {
+  if (!activeMusicKeys.length) return;
+
+  for (let i = 0; i < activeMusicKeys.length; i++) {
+    let sound = getAudio(activeMusicKeys[i]);
+    if (sound && sound.isPlaying) {
+      sound.pause();
+    }
+  }
+}
+
+function resumeMusic() {
+  if (!activeMusicKeys.length) return;
+
+  for (let i = 0; i < activeMusicKeys.length; i++) {
+    let sound = getAudio(activeMusicKeys[i]);
+    if (sound && sound.paused) {
+      sound.resume();
+    }
+  }
+}
+
+function playLoopingMusic(soundKeys) {
+  ensureAudioBank();
+  if (!audioBank) return;
+
+  stopMusic();
+
+  for (let i = 0; i < soundKeys.length; i++) {
+    let sound = getAudio(soundKeys[i]);
+    if (sound) {
+      let volume = AUDIO_VOLUMES[soundKeys[i]] || 1;
+      sound.volume = volume;
+      sound.loopFull(volume);
+    }
+  }
+
+  activeMusicKeys = soundKeys.slice(0);
+}
+
+function startSplashMusic() {
+  playLoopingMusic(['splashMusic']);
+}
+
+function startGameMusic(levelConfig) {
+  if (levelConfig && levelConfig.music) {
+    playLoopingMusic(levelConfig.music);
+  } else {
+    playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
+  }
+}
+
+// función para reproducir sonidos puntuales
+function playSound(name) {
+  if (!name) return;
+  if (name == 'lose') {
+    stopMusic();
+  }
+  playUiSound(name);
+}
+
+//--------------------------------------------- COMBOS ---------------------------------------------
+
+let comboCount = 0;
+let comboExpiresAt = 0;
+let comboLabel = null;
+let comboTween = null;
+let floatingBonusFlip = false;
+
+const SCORE_BY_LINES = {
+  1: 10,
+  2: 20,
+  3: 30,
+  4: 40
+};
+
+const BONUS_MULTI_LINE = {
+  2: 150,
+  3: 300,
+  4: 500
+};
+
+const COMBO_WINDOW_MS = 10000;
+const COMBO_SHRINK_MS = 14000;
+const COMBO_SCORE_STEP = 50;
+
+function showFloatingBonusText(text, color) {
+  floatingBonusFlip = !floatingBonusFlip;
+  let yOffset = floatingBonusFlip ? -0.06 : 0.06;
+  let baseY = gameHeight * (0.35 + yOffset);
+
+  let t = game.add.text(
+    boardWidth / 2,
+    baseY,
+    text,
+    { font: '24px KyotoTitle', fill: color, align: 'center' }
+  );
+  t.anchor.set(0.5);
+  t.alpha = 0.95;
+  game.world.bringToTop(t);
+
+  let tween = game.add.tween(t)
+    .to({ y: t.y - 48, alpha: 0 }, 2600, Phaser.Easing.Linear.None);
+
+  tween.onComplete.add(function () {
+    t.destroy();
+  });
+
+  tween.start();
+}
+
+function showComboIndicator(multiplierText) {
+  if (!comboLabel) {
+    comboLabel = game.add.text(
+      boardWidth / 2,
+      gameHeight * 0.18,
+      multiplierText,
+      { font: '36px KyotoTitle', fill: '#ffffff', align: 'center' }
+    );
+    comboLabel.anchor.set(0.5);
+  }
+
+  comboLabel.text = multiplierText;
+  comboLabel.alpha = 1;
+  comboLabel.scale.set(1.5);
+  game.world.bringToTop(comboLabel);
+
+  if (comboTween) game.tweens.remove(comboTween);
+  game.tweens.removeFrom(comboLabel.scale);
+  comboTween = game.add.tween(comboLabel)
+    .to({ alpha: 0, x: comboLabel.x, y: comboLabel.y, }, COMBO_WINDOW_MS, Phaser.Easing.Linear.None);
+
+  let scaleTween = game.add.tween(comboLabel.scale)
+    .to({ x: 0.6, y: 0.6 }, COMBO_SHRINK_MS, Phaser.Easing.Linear.None);
+
+  comboTween.onComplete.add(function () {
+    if (comboLabel) comboLabel.alpha = 0;
+  });
+
+  comboTween.start();
+  scaleTween.start();
+}
+
+function handleComboBonus(nLines) {
+  if (nLines <= 0) return 0;
+
+  let now = game.time.now;
+  if (now <= comboExpiresAt) {
+    comboCount += nLines;
+  } else {
+    comboCount = nLines;
+  }
+
+  comboExpiresAt = now + COMBO_WINDOW_MS;
+
+  let multiplierValue = comboCount * 10;
+  showComboIndicator('x' + multiplierValue);
+  return multiplierValue;
+}
+
+function handleMultiLineBonus(nLines) {
+  let bonus = BONUS_MULTI_LINE[nLines] || 0;
+  if (bonus > 0) {
+    score += bonus;
+  }
+  return bonus;
+}
+
+//--------------------------------------------- WIND ---------------------------------------------
+
+function setupWindEnemy() {
+  if (windArm) {
+    windArm.destroy();
+  }
+
+  windArm = game.add.sprite(game.world.centerX, game.world.centerY, 'wind');
+  windArm.anchor.set(0.5, 0.5);
+  windArm.alpha = 1;
+  windArm.visible = false;
+  windInProgress = false;
+  scheduleNextWind();
+}
+
+function scheduleNextWind(minMs, maxMs) {
+  let min = (minMs !== undefined) ? minMs : WIND_MIN_INTERVAL_MS;
+  let max = (maxMs !== undefined) ? maxMs : WIND_MAX_INTERVAL_MS;
+  windNextAt = game.time.now + game.rnd.integerInRange(min, max);
+}
+
+function applyWindPush(dir) {
+  if (!tetromino) return;
+
+  if (tetromino.canMove(tetromino.slide.bind(tetromino), dir)) {
+    tetromino.move(tetromino.slide.bind(tetromino), tetromino.slideCenter.bind(tetromino), dir);
+  }
+}
+
+function triggerWind(dir) {
+  if (!windArm || windInProgress || gameOverState || pausedState) return;
+  if (!dir) return;
+
+  if (!tetromino || !tetromino.canMove(tetromino.slide.bind(tetromino), dir)) {
+    scheduleNextWind(WIND_RETRY_MS, WIND_RETRY_MS);
+    return;
+  }
+
+  windInProgress = true;
+
+  let centerX = game.world.centerX;
+  let centerY = game.world.centerY;
+  let travel = BLOCKSIZE * 2;
+
+  let targetX = centerX;
+  let targetY = centerY;
+
+  windArm.rotation = 0;
+  windArm.scale.set(1, 1);
+
+  if (dir === 'left') {
+    windArm.scale.x = -1;
+    targetX = centerX - travel;
+  } else if (dir === 'right') {
+    windArm.scale.x = 1;
+    targetX = centerX + travel;
+  } else if (dir === 'down') {
+    windArm.rotation = Math.PI / 2;
+    targetY = centerY + travel;
+  } else if (dir === 'up') {
+    windArm.rotation = -Math.PI / 2;
+    targetY = centerY - travel;
+  }
+
+  windArm.x = centerX;
+  windArm.y = centerY;
+  windArm.visible = true;
+
+  playSound('wind');
+  applyWindPush(dir);
+
+  let outTween = game.add.tween(windArm)
+    .to({ x: targetX, y: targetY }, WIND_ARM_OUT_MS, Phaser.Easing.Linear.None);
+
+  outTween.onComplete.add(function () {
+    windArm.visible = false;
+    windInProgress = false;
+    scheduleNextWind();
+  });
+
+  outTween.start();
+}
+
+//--------------------------------------------- HUD ---------------------------------------------
+
+function setupHUD() {
+  hudPlayer = document.getElementById('hud-player');
+  hudObjective = document.getElementById('hud-objective');
+  hudLines = document.getElementById('hud-lines');
+  hudScore = document.getElementById('hud-score');
+  hudTime = document.getElementById('hud-time');
+
+  if (!hudPlayer || !hudObjective || !hudLines || !hudScore || !hudTime) return;
+
+  hudPlayer.onclick = function () {
+    let proposedName = window.prompt('Introduce tu nombre', getPlayerName());
+    if (proposedName === null) return;
+
+    proposedName = proposedName.trim();
+    if (proposedName === '') proposedName = 'Player';
+
+    localStorage.setItem('playerName', proposedName);
+    window.playerName = proposedName;
+    updateHUD();
+  };
+
+  updateHUD();
+}
+
+function SetHudVisible(visible) {
+  let hudOverlay = document.getElementById('hud-overlay');
+  if (hudOverlay) {
+    if (visible) {
+      hudOverlay.style.display = 'flex';
+    } else {
+      hudOverlay.style.display = 'none';
+    }
+  }
+}
+
+function updateHUD() {
+  if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
+  if (hudObjective) hudObjective.textContent = 'OBJECTIVE: ' + getCurrentObjective();
+  if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
+  if (hudScore) hudScore.textContent = 'SCORE: ' + score;
+}
+
+function getCurrentObjective() {
+  if (currentLevelConfig && currentLevelConfig.objective) {
+    return currentLevelConfig.objective;
+  }
+
+  return '-';
+}
+
+function addScoreForClearedLines(nLines) {
+  if (nLines <= 0) return;
+  let gained = SCORE_BY_LINES[nLines] || (800 + (nLines - 4) * 400);
+  linesCompleted += nLines;
+  score += gained;
+  return gained;
+}
+
+function addTimeForClearedLines(nLines) {
+  if (nLines <= 0) return 0;
+
+  let bonusMs = nLines * 5000;
+  matchTimeLeftMs += bonusMs;
+  updateMatchTimerText();
+  return bonusMs;
+}
+
+let bajado1 = false;
+let bajado2 = false;
+function updateMatchTimerText() {
+  if (!hudTime) return;
+
+  let secondsLeft = Math.max(0, Math.ceil(matchTimeLeftMs / 1000));
+  if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 2 && !bajado1) {
+    FALL_DELAY = SPEED_MID_MS;
+    timer.remove(loop);
+    loop = timer.loop(FALL_DELAY, fall, this);
+    bajado1 = true;
+  } else if (secondsLeft <= (MATCH_DURATION_MS / 1000) / 4 && !bajado2) {
+    FALL_DELAY = SPEED_MAX_MS;
+    timer.remove(loop);
+    loop = timer.loop(FALL_DELAY, fall, this);
+    bajado2 = true;
+  }
+  if (secondsLeft <= 10 && secondsLeft > 0 && !ticktockPlaying) {
+    let tt = getAudio('ticktock');
+    if (tt) {
+      tt.volume = AUDIO_VOLUMES.ticktock;
+      tt.loopFull(AUDIO_VOLUMES.ticktock);
+    }
+    ticktockPlaying = true;
+  }
+  if (secondsLeft === 0 && ticktockPlaying) {
+    let tt = getAudio('ticktock');
+    if (tt && tt.isPlaying) tt.stop();
+    ticktockPlaying = false;
+  }
+  hudTime.textContent = 'TIME: ' + secondsLeft;
+}
+
+//--------------------------------------------- TWEENS ---------------------------------------------
+
+function fadeInTetromino() {
+  for (let i = 0; i < tetromino.blocks.length; i++) {
+    let bloque = tetromino.blocks[i];
+
+    bloque.alpha = 0; 
+
+    game.add.tween(bloque)
+      .to({ alpha: 1 }, 200, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
+
+function landingTween(blocks) {
+  if (!blocks || !blocks.length) return;
+  for (let i = 0; i < blocks.length; i++) {
+    let b = blocks[i];
+    if (!b || !b.scale) continue;
+    game.add.tween(b.scale)
+      .to({ x: 1, y: 1 }, 20, Phaser.Easing.Linear.None)
+      .to({ x: 1.05, y: 1.05 }, 20, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
+
+function clearBoardTween() {
+  for (let x = 0; x < theTetris.sceneBlocks.length; x++) {
+    for (let y = 0; y < theTetris.sceneBlocks[x].length; y++) {
+      let bloque = theTetris.sceneBlocks[x][y];
+
+      if (bloque) {
+        game.add.tween(bloque)
+          .to({ alpha: 0 }, 200, Phaser.Easing.Linear.None)
+          .delay(x * 60)
+          .start();
+      }
+    }
+  }
+
+  if (tetromino && tetromino.blocks) {
+    for (let i = 0; i < tetromino.blocks.length; i++) {
+      let bloque = tetromino.blocks[i];
+
+      game.add.tween(bloque)
+        .to({ alpha: 0 }, 200, Phaser.Easing.Linear.None)
+        .delay(0)
+        .start();
+    }
+  }
+}
+
+function shakeBlocks() {
+  if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
+  lastWallShakeAt = game.time.now;
+
+  playUiSound('noRotation');
+
+  for (let i = 0; i < tetromino.blocks.length; i++) {
+    let bloque = tetromino.blocks[i];
+    let originalX = tetromino.cells[i][0] * BLOCKSIZE;
+
+    // Avoid stacking tweens and re-anchor to logical position to prevent visual drift.
+    game.tweens.removeFrom(bloque);
+    bloque.x = originalX;
+
+    game.add.tween(bloque)
+      .to({ x: originalX + 5 }, 50, Phaser.Easing.Linear.None)
+      .to({ x: originalX - 5 }, 50, Phaser.Easing.Linear.None)
+      .to({ x: originalX }, 50, Phaser.Easing.Linear.None)
+      .start();
+  }
+}
+
+//funcion brillo de lineas completas
+function blinkLine(lineY, times) {
+  for (let x = 0; x < NUMBLOCKS_X; x++) {
+    let bloque = theTetris.sceneBlocks[x][lineY];
+
+    if (bloque) {
+      game.add.tween(bloque)
+        .to({ alpha: 0.2 }, 80, Phaser.Easing.Linear.None)
+        .to({ alpha: 0.6 }, 80, Phaser.Easing.Linear.None)
+        .start();
+    }
+  }
 }
