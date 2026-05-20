@@ -31,7 +31,8 @@ const TETROMINO_COLORS = {
   5: 0xCC00FF,  // T - Purple
   6: 0xFF0000,  // Z - Rojo
   7: 0x19C37D,  // Rectangulo 3x2 (6) - Verde agua
-  8: 0xFF5E5B   // Serpiente larga (6) - Coral
+  8: 0xFF5E5B,   // Serpiente larga (6) - Coral
+  9: 0x9b9b9b   // Gris
 };
 // ultimo cambio
 function spawnBottomBlocks() {
@@ -82,8 +83,7 @@ function spawnBottomBlocks() {
     }
 
     // Crear nuevo bloque en la fila inferior
-    let shape = game.rnd.integerInRange(0, N_BLOCK_TYPES - 1);
-    let color = getTetrominoColor(shape);
+    let color = getTetrominoColor(9);
     let g = createBlockGraphic(color, BLOCKSIZE);
     g.x = x * BLOCKSIZE;
     g.y = (NUMBLOCKS_Y - 1) * BLOCKSIZE;
@@ -147,7 +147,7 @@ const AUDIO_VOLUMES = {
   pop: 0.5,
   ticktock: 0.6,
   noRotation: 0.5,
-  linea: 0.7,
+  linea: 0.4,
   wind: 0.1
 };
 
