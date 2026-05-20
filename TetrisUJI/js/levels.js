@@ -1,19 +1,13 @@
-// Level selection screen
-
 var levelsState = {
 
   preload: function () {
-    // Aquí se cargarían los assets
   },
 
   create: function () {
     if (window.setDomHudVisible) window.setDomHudVisible(false);
     stopMusic();
-
-    // Background
     game.stage.backgroundColor = '#8B0000';
 
-    // Title
     var titulo = game.add.text(
       game.world.centerX,
       game.world.centerY -150,
@@ -22,7 +16,6 @@ var levelsState = {
     );
     titulo.anchor.set(0.5);
 
-    // Level 1 goes to Game - for now it is just text
     var btnNivel1 = game.add.text(
       game.world.centerX,
       game.world.centerY - 40,
@@ -31,17 +24,14 @@ var levelsState = {
     );
     btnNivel1.anchor.set(0.5);
     btnNivel1.inputEnabled = true;
-    // Clickable button
     btnNivel1.events.onInputDown.add(function () {
       window.selectedLevelKey = 'level1';
       playSound('button2');
       game.state.start('Game');
     }, this);
-    // Hover effect
     btnNivel1.events.onInputOver.add(function () { playSound('button1'); btnNivel1.fill = '#ffdd00'; }, this);
     btnNivel1.events.onInputOut.add(function () { btnNivel1.fill = '#ffffff'; }, this);
 
-    // Level 2 button: load level2
     var btnNivel2 = game.add.text(
       game.world.centerX,
       game.world.centerY + 20,
@@ -58,7 +48,6 @@ var levelsState = {
     btnNivel2.events.onInputOver.add(function () { playSound('button1'); btnNivel2.fill = '#ffdd00'; }, this);
     btnNivel2.events.onInputOut.add(function () { btnNivel2.fill = '#ffffff'; }, this);
 
-    // Level 3 button: load level3
     var btnNivel3 = game.add.text(
       game.world.centerX,
       game.world.centerY + 80,
@@ -76,7 +65,6 @@ var levelsState = {
     btnNivel3.events.onInputOut.add(function () { btnNivel3.fill = '#ffffff'; }, this);
 
 
-    // Button that goes to the credits screen
     var btnCredits = game.add.text(
         game.world.centerX +90,
         game.world.centerY +230,
@@ -85,21 +73,15 @@ var levelsState = {
       );
       btnCredits.anchor.set(0.5);
       btnCredits.inputEnabled = true;
-      // Clickable button
       btnCredits.events.onInputDown.add(function () {
         playSound('button2');
         game.state.start('credits');
       }, this);
-      //efecto hover
       btnCredits.events.onInputOver.add(function () { playSound('button1'); btnCredits.fill = '#ffdd00'; }, this);
       btnCredits.events.onInputOut.add(function () { btnCredits.fill = '#ffffff'; }, this);
 
 
-btnCredits.anchor.set(1, 1);
+    btnCredits.anchor.set(1, 1);
   },
-
-  update: function () {
-    // Vacío por ahora
-  }
 
 };

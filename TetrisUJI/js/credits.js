@@ -1,11 +1,4 @@
-// Credits screen
-
 var creditsState = {
-
-  preload: function () {
-    // cargar assests que necesitemos
-  },
-
   create: function () {
     if (window.setDomHudVisible) window.setDomHudVisible(false);
     stopMusic();
@@ -67,9 +60,4 @@ var creditsState = {
     btnJugarOtraVez.events.onInputOver.add(function () { playSound('button1'); btnJugarOtraVez.fill = '#ffdd00'; }, this);
     btnJugarOtraVez.events.onInputOut.add(function () { btnJugarOtraVez.fill = '#ffffff'; }, this);
   },
-
-  update: function () {
-    // Por ahora no hace nada
-  }
-
 };
