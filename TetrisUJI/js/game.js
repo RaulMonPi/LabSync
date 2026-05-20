@@ -143,7 +143,7 @@ const AUDIO_VOLUMES = {
   splashMusic: 0.2,
   gameMusicCrowd: 0.1,
   gameMusicTrack: 0.2,
-  gameMusicLevel2: 2.2,
+  gameMusicLevel2: 0.2,
   gameMusicLevel3: 0.2,
   lose: 0.7,
   pop: 0.5,
@@ -451,7 +451,7 @@ let move_offsets = {
 
 // Elements for the game
 let tetromino, theTetris;
-let cursors, keyRotate, keyRestart, keyPause;
+let cursors, keyRotate, keyRestart, keyPause, keyEsc;
 let gameOverState = false;
 let pausedState = false;
 let pauseWasDown = false;
@@ -463,6 +463,7 @@ let completionBlinkTweens = [];
 let blinkingRows = [];
 let lineaAlertActive = false;
 let pauseLabel = null;
+let pauseHintLabel = null;
 let hudTime = null;
 let FALL_DELAY = INITIAL_FALL_DELAY;
 let MATCH_DURATION_MS = 100000;
@@ -476,6 +477,7 @@ let timer, loop;
 let bottomPushLoop = null; 
 let isCleaningLines = false; 
 let currentMovementTimer = 0;
+let escWasDown = false;
 const WALL_SHAKE_COOLDOWN_MS = 120;
 let lastWallShakeAt = 0;
 const ROTATE_COOLDOWN_MS = 100;
@@ -896,6 +898,7 @@ function resetGame() {
   keyRotate = game.input.keyboard.addKey(Phaser.Keyboard.UP);
   keyRestart = game.input.keyboard.addKey(Phaser.Keyboard.R);
   keyPause = game.input.keyboard.addKey(Phaser.Keyboard.P);
+  keyEsc = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
 
   pauseLabel = game.add.text(
     boardWidth / 2,
@@ -903,8 +906,18 @@ function resetGame() {
     'PAUSED',
     { font: '48px KyotoTitle', fill: '#ffdd00', align: 'center' }
   );
+
   pauseLabel.anchor.set(0.5);
   pauseLabel.visible = false;
+
+  pauseHintLabel = game.add.text(
+    boardWidth / 2,
+    gameHeight / 2 + 42,
+    'Press ESC to return to menu',
+    { font: '18px KyotoTitle', fill: '#ffffff', align: 'center' }
+  );
+  pauseHintLabel.anchor.set(0.5);
+  pauseHintLabel.visible = false;
   pausedState = false;
   pauseWasDown = false;
   setupHUD();
@@ -1225,7 +1238,9 @@ function togglePause() {
 
   pausedState = !pausedState;
   pauseLabel.visible = pausedState;
+  if (pauseHintLabel) pauseHintLabel.visible = pausedState;
   game.world.bringToTop(pauseLabel);
+  if (pauseHintLabel) game.world.bringToTop(pauseHintLabel);
 
   if (pausedState) {
     timer.pause();
@@ -1236,6 +1251,19 @@ function togglePause() {
     currentMovementTimer = 0;
   }
 };
+
+function returnToMenuFromPause() {
+  pausedState = false;
+  pauseWasDown = false;
+  escWasDown = false;
+
+  if (window.setDomHudVisible) window.setDomHudVisible(false);
+  SetHudVisible(false);
+  stopMusic();
+  window.menuMusicShouldRestart = true;
+
+  game.state.start('Menu');
+}
 
 function shakeBlocks() {
   if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
@@ -1303,6 +1331,18 @@ function updateGame() {
     return;
   }
   if (!pauseIsDown) pauseWasDown = false;
+
+  if (pausedState) {
+    let escIsDown = keyEsc.isDown;
+    if (escIsDown && !escWasDown) {
+      escWasDown = true;
+      returnToMenuFromPause();
+      return;
+    }
+    if (!escIsDown) escWasDown = false;
+  } else {
+    escWasDown = false;
+  }
 
   if (pausedState || gameOverState) return;
 
