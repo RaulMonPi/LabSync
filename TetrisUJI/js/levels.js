@@ -34,11 +34,11 @@ var levelsState = {
     // Clickable button
     btnNivel1.events.onInputDown.add(function () {
       window.selectedLevelKey = 'level1';
-      playUiSound('button2');
+      playSound('button2');
       game.state.start('Game');
     }, this);
     // Hover effect
-    btnNivel1.events.onInputOver.add(function () { playUiSound('button1'); btnNivel1.fill = '#ffdd00'; }, this);
+    btnNivel1.events.onInputOver.add(function () { playSound('button1'); btnNivel1.fill = '#ffdd00'; }, this);
     btnNivel1.events.onInputOut.add(function () { btnNivel1.fill = '#ffffff'; }, this);
 
     // Level 2 button: load level2
@@ -52,10 +52,10 @@ var levelsState = {
     btnNivel2.inputEnabled = true;
     btnNivel2.events.onInputDown.add(function () {
       window.selectedLevelKey = 'level2';
-      playUiSound('button2');
+      playSound('button2');
       game.state.start('Game');
     }, this);
-    btnNivel2.events.onInputOver.add(function () { playUiSound('button1'); btnNivel2.fill = '#ffdd00'; }, this);
+    btnNivel2.events.onInputOver.add(function () { playSound('button1'); btnNivel2.fill = '#ffdd00'; }, this);
     btnNivel2.events.onInputOut.add(function () { btnNivel2.fill = '#ffffff'; }, this);
 
     // Level 3 button: load level3
@@ -69,10 +69,10 @@ var levelsState = {
     btnNivel3.inputEnabled = true;
     btnNivel3.events.onInputDown.add(function () {
       window.selectedLevelKey = 'level3';
-      playUiSound('button2');
+      playSound('button2');
       game.state.start('Game');
     }, this);
-    btnNivel3.events.onInputOver.add(function () { playUiSound('button1'); btnNivel3.fill = '#ffdd00'; }, this);
+    btnNivel3.events.onInputOver.add(function () { playSound('button1'); btnNivel3.fill = '#ffdd00'; }, this);
     btnNivel3.events.onInputOut.add(function () { btnNivel3.fill = '#ffffff'; }, this);
 
 
@@ -87,11 +87,11 @@ var levelsState = {
       btnCredits.inputEnabled = true;
       // Clickable button
       btnCredits.events.onInputDown.add(function () {
-        playUiSound('button2');
+        playSound('button2');
         game.state.start('credits');
       }, this);
       //efecto hover
-      btnCredits.events.onInputOver.add(function () { playUiSound('button1'); btnCredits.fill = '#ffdd00'; }, this);
+      btnCredits.events.onInputOver.add(function () { playSound('button1'); btnCredits.fill = '#ffdd00'; }, this);
       btnCredits.events.onInputOut.add(function () { btnCredits.fill = '#ffffff'; }, this);
 
 

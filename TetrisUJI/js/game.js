@@ -277,75 +277,9 @@ function createBlockGraphic(color, size, alpha) {
   return g;
 }
 
-function clearCompletionBlink() {
-  for (let i = 0; i < completionBlinkTweens.length; i++) {
-    if (completionBlinkTweens[i]) {
-      completionBlinkTweens[i].stop();
-    }
-  }
-  completionBlinkTweens = [];
-  for (let r = 0; r < blinkingRows.length; r++) {
-    let row = blinkingRows[r];
-    if (!theTetris) break;
-    for (let x = 0; x < NUMBLOCKS_X; x++) {
-      let bloque = theTetris.sceneBlocks[x][row];
-      if (bloque) bloque.alpha = 1;
-    }
-  }
-  blinkingRows = [];
-}
-
-function updateCompletionBlink() {
-  clearCompletionBlink();
-  if (!ghostCells || ghostCells.length === 0 || !theTetris) {
-    lineaAlertActive = false;
-    return;
-  }
-
-  let ghostRowSet = {};
-  for (let i = 0; i < ghostCells.length; i++) {
-    ghostRowSet[ghostCells[i][1]] = true;
-  }
-
-  let rowsToCheck = Object.keys(ghostRowSet).map(Number);
-  for (let r = 0; r < rowsToCheck.length; r++) {
-    let row = rowsToCheck[r];
-    let filledCols = {};
-    for (let x = 0; x < NUMBLOCKS_X; x++) {
-      if (theTetris.scene[x][row] === OCCUPIED) filledCols[x] = true;
-    }
-    for (let i = 0; i < ghostCells.length; i++) {
-      if (ghostCells[i][1] === row) filledCols[ghostCells[i][0]] = true;
-    }
-    if (Object.keys(filledCols).length === NUMBLOCKS_X) {
-      blinkingRows.push(row);
-      for (let x = 0; x < NUMBLOCKS_X; x++) {
-        let bloque = theTetris.sceneBlocks[x][row];
-        if (bloque) {
-          let tween = game.add.tween(bloque)
-            .to({ alpha: 0.25 }, 180, Phaser.Easing.Linear.None)
-            .to({ alpha: 1.0 }, 180, Phaser.Easing.Linear.None);
-          tween.repeatAll(-1);
-          tween.start();
-          completionBlinkTweens.push(tween);
-        }
-      }
-    }
-  }
-
-  if (blinkingRows.length > 0) {
-    if (!lineaAlertActive) {
-      lineaAlertActive = true;
-      playUiSound('linea');
-    }
-  } else {
-    lineaAlertActive = false;
-  }
-}
-
+// Calcula la "sombra" de la pieza actual y la dibuja donde debería de caer si sigue recta
 function updateGhostPiece() {
   clearGhostPiece();
-  //Pilla las coordenadas del tetromino actual
   let landingCells = tetromino.cells.map(function (cell) {
     return [cell[0], cell[1]];
   });
@@ -389,6 +323,7 @@ function clearGhostPiece() {
   ghostCells = [];
 }
 
+
 function resetGame() {
   game.world.removeAll();
   clearGhostPiece();
@@ -418,7 +353,6 @@ function resetGame() {
     hudObjective.textContent = 'OBJECTIVE: ' + getCurrentObjective();
   }
 
-  // initialisation
   gameOverState = false;
   currentMovementTimer = 0;
   matchTimeLeftMs = MATCH_DURATION_MS;
@@ -438,7 +372,6 @@ function resetGame() {
   if (ttReset && ttReset.isPlaying) ttReset.stop();
   window.scoreSaved = false;
 
-  // Create Trellis and initialisation of its grid
   theTetris = new Tetris();
   theTetris.initGrid();
 
@@ -464,7 +397,7 @@ function resetGame() {
   nextShape = randomShape();
   updateNextPreview(nextShape);
 
-  // input
+  // input de los botones
   cursors = game.input.keyboard.createCursorKeys();
   keyRotate = game.input.keyboard.addKey(Phaser.Keyboard.UP);
   keyRestart = game.input.keyboard.addKey(Phaser.Keyboard.R);
@@ -487,6 +420,7 @@ function resetGame() {
     'Press ESC to return to menu',
     { font: '18px KyotoTitle', fill: '#ffffff', align: 'center' }
   );
+  
   pauseHintLabel.anchor.set(0.5);
   pauseHintLabel.visible = false;
   pausedState = false;
@@ -567,6 +501,7 @@ function updateNextPreview(shape) {
   }
 };
 
+// Cambia a la pantalla de game over
 function setGameOver(on) {
   gameOverState = on;
   if (gameOverState) {
@@ -579,9 +514,7 @@ function setGameOver(on) {
 
     clearBoardTween();
 
-    //para esperar a que termine
     game.time.events.add(800, function () {
-      // Restaurar fondo estándar al salir
       document.body.style.background = "url('../assets/BG/fondoEstandar.png') no-repeat center center / cover fixed";
       game.state.start('HallFame');
     }, this);
@@ -669,7 +602,6 @@ function getTetrominoColor(shape) {
   return TETROMINO_COLORS[shape] || PIECE_COLOR;
 }
 
-// Bucle de actualización para leer input y mover la pieza
 function updateGame() {
   let pauseIsDown = keyPause.isDown;
   if (pauseIsDown && !pauseWasDown) {
@@ -772,7 +704,7 @@ function checkLines(candidateLines) {
   }
 
   if (collapsed.length) {
-    isCleaningLines = true; // activar bandera
+    isCleaningLines = true;
 
     game.time.events.add(300, function () {
       for (let i = 0; i < collapsed.length; i++) {
@@ -803,7 +735,6 @@ function checkLines(candidateLines) {
   }
 }
 
-// Suma el estado de una fila para detectar si está completamente ocupada.
 function lineSum(y) {
   let s = 0;
   for (let x = 0; x < NUMBLOCKS_X; x++)
@@ -811,7 +742,6 @@ function lineSum(y) {
   return s;
 };
 
-// Borra una fila: destruye los Graphics de esa fila y marca las celdas como vacías.
 function cleanLine(y) {
   for (let x = 0; x < NUMBLOCKS_X; x++) {
     if (theTetris.sceneBlocks[x][y]) {
@@ -822,9 +752,8 @@ function cleanLine(y) {
   }
 };
 
-// Colapsa filas: baja todo lo que queda por encima de las líneas eliminadas.
+// Elimina filas y baja las de arriba
 function collapse(linesToCollapse) {
-  // sort ascending so we collapse from bottom up
   linesToCollapse.sort(function (a, b) {
     return a - b;
   });
@@ -832,14 +761,12 @@ function collapse(linesToCollapse) {
     let y = linesToCollapse[idx];
     for (let yy = y; yy > 0; yy--) {
       for (let x = 0; x < NUMBLOCKS_X; x++) {
-        // shift occupancy
         theTetris.scene[x][yy] = theTetris.scene[x][yy - 1];
         theTetris.sceneBlocks[x][yy] = theTetris.sceneBlocks[x][yy - 1];
         if (theTetris.sceneBlocks[x][yy])
           theTetris.sceneBlocks[x][yy].y = yy * BLOCKSIZE;
       }
     }
-    // clear top line
     for (let x2 = 0; x2 < NUMBLOCKS_X; x2++) {
       theTetris.scene[x2][0] = EMPTY;
       theTetris.sceneBlocks[x2][0] = null;
@@ -847,8 +774,8 @@ function collapse(linesToCollapse) {
   }
 };
 
+// Hace aparecer bloques nuevos desde abajo de vez en cuando para que sea más difícil
 function spawnBottomBlocks() {
-  // no ejecutar mientras se están limpiando lineas
   if (gameOverState || pausedState || !theTetris || isCleaningLines) return;
   
   let maxCols = NUMBLOCKS_X;
@@ -876,7 +803,6 @@ function spawnBottomBlocks() {
       return;
     }
 
-    // Mover hacia arriba: si hay bloque en la celda de abajo y tiene soporte, se sube.
     for (let y = 0; y < NUMBLOCKS_Y - 1; y++) {
       let nextCell = y + 1;
 
@@ -894,7 +820,6 @@ function spawnBottomBlocks() {
       }
     }
 
-    // Crear nuevo bloque en la fila inferior
     let color = getTetrominoColor(9);
     let g = createBlockGraphic(color, BLOCKSIZE);
     g.x = x * BLOCKSIZE;
@@ -904,7 +829,6 @@ function spawnBottomBlocks() {
     createdBlocks.push(g);
   }
 
-  // Animar los bloques recién creados y comprobar líneas
   landingTween(createdBlocks);
   let allRows = [];
   for (let y = 0; y < NUMBLOCKS_Y; y++) allRows.push(y);
@@ -978,11 +902,17 @@ function getAudio(soundKey) {
   return bank ? bank[soundKey] : null;
 }
 
-function playUiSound(soundKey) {
-  let sound = getAudio(soundKey);
+// Reproduce un sonido puntual y, si hace falta, corta la música antes de lanzarlo.
+function playSound(name) {
+  if (!name) return;
+  if (name == 'lose') {
+    stopMusic();
+  }
+
+  let sound = getAudio(name);
 
   if (sound) {
-    sound.volume = AUDIO_VOLUMES[soundKey] || 1;
+    sound.volume = AUDIO_VOLUMES[name] || 1;
     sound.play();
   }
 }
@@ -1050,15 +980,6 @@ function startGameMusic(levelConfig) {
   } else {
     playLoopingMusic(['gameMusicCrowd', 'gameMusicTrack']);
   }
-}
-
-// función para reproducir sonidos puntuales
-function playSound(name) {
-  if (!name) return;
-  if (name == 'lose') {
-    stopMusic();
-  }
-  playUiSound(name);
 }
 
 //--------------------------------------------- COMBOS ---------------------------------------------
@@ -1409,13 +1330,12 @@ function shakeBlocks() {
   if (game.time.now - lastWallShakeAt < WALL_SHAKE_COOLDOWN_MS) return;
   lastWallShakeAt = game.time.now;
 
-  playUiSound('noRotation');
+  playSound('noRotation');
 
   for (let i = 0; i < tetromino.blocks.length; i++) {
     let bloque = tetromino.blocks[i];
     let originalX = tetromino.cells[i][0] * BLOCKSIZE;
 
-    // Avoid stacking tweens and re-anchor to logical position to prevent visual drift.
     game.tweens.removeFrom(bloque);
     bloque.x = originalX;
 
@@ -1438,5 +1358,71 @@ function blinkLine(lineY, times) {
         .to({ alpha: 0.6 }, 80, Phaser.Easing.Linear.None)
         .start();
     }
+  }
+}
+
+function clearCompletionBlink() {
+  for (let i = 0; i < completionBlinkTweens.length; i++) {
+    if (completionBlinkTweens[i]) {
+      completionBlinkTweens[i].stop();
+    }
+  }
+  completionBlinkTweens = [];
+  for (let r = 0; r < blinkingRows.length; r++) {
+    let row = blinkingRows[r];
+    if (!theTetris) break;
+    for (let x = 0; x < NUMBLOCKS_X; x++) {
+      let bloque = theTetris.sceneBlocks[x][row];
+      if (bloque) bloque.alpha = 1;
+    }
+  }
+  blinkingRows = [];
+}
+
+function updateCompletionBlink() {
+  clearCompletionBlink();
+  if (!ghostCells || ghostCells.length === 0 || !theTetris) {
+    lineaAlertActive = false;
+    return;
+  }
+
+  let ghostRowSet = {};
+  for (let i = 0; i < ghostCells.length; i++) {
+    ghostRowSet[ghostCells[i][1]] = true;
+  }
+
+  let rowsToCheck = Object.keys(ghostRowSet).map(Number);
+  for (let r = 0; r < rowsToCheck.length; r++) {
+    let row = rowsToCheck[r];
+    let filledCols = {};
+    for (let x = 0; x < NUMBLOCKS_X; x++) {
+      if (theTetris.scene[x][row] === OCCUPIED) filledCols[x] = true;
+    }
+    for (let i = 0; i < ghostCells.length; i++) {
+      if (ghostCells[i][1] === row) filledCols[ghostCells[i][0]] = true;
+    }
+    if (Object.keys(filledCols).length === NUMBLOCKS_X) {
+      blinkingRows.push(row);
+      for (let x = 0; x < NUMBLOCKS_X; x++) {
+        let bloque = theTetris.sceneBlocks[x][row];
+        if (bloque) {
+          let tween = game.add.tween(bloque)
+            .to({ alpha: 0.25 }, 180, Phaser.Easing.Linear.None)
+            .to({ alpha: 1.0 }, 180, Phaser.Easing.Linear.None);
+          tween.repeatAll(-1);
+          tween.start();
+          completionBlinkTweens.push(tween);
+        }
+      }
+    }
+  }
+
+  if (blinkingRows.length > 0) {
+    if (!lineaAlertActive) {
+      lineaAlertActive = true;
+      playSound('linea');
+    }
+  } else {
+    lineaAlertActive = false;
   }
 }

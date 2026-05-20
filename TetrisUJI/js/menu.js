@@ -38,11 +38,11 @@ var menuState = {
             btn.anchor.set(0.5);
             btn.inputEnabled = true;
             btn.events.onInputDown.add(function () {
-                playUiSound('button2');
+                playSound('button2');
                 onClick.call(this);
             }, this);
             btn.events.onInputOver.add(function () {
-                playUiSound('button1');
+                playSound('button1');
                 btn.fill = '#ffdd00';
             }, this);
             btn.events.onInputOut.add(function () { btn.fill = '#ffffff'; }, this);

@@ -190,7 +190,7 @@ var hallFameState = {
     btnJugarOtraVez.anchor.set(0.5);
     btnJugarOtraVez.inputEnabled = true;
     btnJugarOtraVez.events.onInputDown.add(function () {
-      playUiSound('button2');
+      playSound('button2');
       window.menuMusicShouldRestart = true;
       game.state.start('Menu');
     }, this);
