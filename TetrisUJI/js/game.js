@@ -130,7 +130,7 @@ const AUDIO_KEYS = {
   pop: 'Pop',
   ticktock: 'Ticktock',
   noRotation: 'NoRotation',
-  linea: 'Linea'
+  linea: 'Linea',
   wind: 'wind'
 };
 
@@ -147,7 +147,7 @@ const AUDIO_VOLUMES = {
   pop: 0.5,
   ticktock: 0.6,
   noRotation: 0.5,
-  linea: 0.7
+  linea: 0.7,
   wind: 0.1
 };
 
@@ -170,7 +170,7 @@ function ensureAudioBank() {
     pop: game.add.audio(AUDIO_KEYS.pop, AUDIO_VOLUMES.pop),
     ticktock: game.add.audio(AUDIO_KEYS.ticktock, AUDIO_VOLUMES.ticktock),
     noRotation: game.add.audio(AUDIO_KEYS.noRotation, AUDIO_VOLUMES.noRotation),
-    linea: game.add.audio(AUDIO_KEYS.linea, AUDIO_VOLUMES.linea)
+    linea: game.add.audio(AUDIO_KEYS.linea, AUDIO_VOLUMES.linea),
     wind: game.add.audio(AUDIO_KEYS.wind, AUDIO_VOLUMES.wind)
   };
 
