@@ -1,7 +1,7 @@
 {
   "level": 2,
-  "time": 75,
-  "objetivo": "Consigue 1000 puntos antes de que se acabe el tiempo",
+  "time": 100,
+  "objective": "Score 1000 points before time runs out.",
 
   "backgroundImage": "assets/BG/fondoBlanco.png",
   "music": ["gameMusicCrowd", "gameMusicLevel2"],

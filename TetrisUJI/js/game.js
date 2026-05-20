@@ -671,14 +671,14 @@ function SetHudVisible(visible) {
 
 function updateHUD() {
   if (hudPlayer) hudPlayer.textContent = 'PLAYER: ' + getPlayerName();
-  if (hudObjective) hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
+  if (hudObjective) hudObjective.textContent = 'OBJECTIVE: ' + getCurrentObjective();
   if (hudLines) hudLines.textContent = 'LINES: ' + linesCompleted;
   if (hudScore) hudScore.textContent = 'SCORE: ' + score;
 }
 
 function getCurrentObjective() {
-  if (currentLevelConfig && currentLevelConfig.objetivo) {
-    return currentLevelConfig.objetivo;
+  if (currentLevelConfig && currentLevelConfig.objective) {
+    return currentLevelConfig.objective;
   }
 
   return '-';
@@ -842,7 +842,7 @@ function resetGame() {
   }
 
   if (hudObjective) {
-    hudObjective.textContent = 'OBJETIVO: ' + getCurrentObjective();
+    hudObjective.textContent = 'OBJECTIVE: ' + getCurrentObjective();
   }
 
   // initialisation
@@ -1213,7 +1213,7 @@ function setGameOver(on) {
 function checkLevelObjective() {
   let levelKey = window.selectedLevelKey;
   
-  if (levelKey == 'level1' && linesCompleted >= 100) {
+  if (levelKey == 'level1' && linesCompleted >= 4) {
     setGameOver(true);
   } else if( levelKey == 'level2' && score >= 1000 ) {
     setGameOver(true);
